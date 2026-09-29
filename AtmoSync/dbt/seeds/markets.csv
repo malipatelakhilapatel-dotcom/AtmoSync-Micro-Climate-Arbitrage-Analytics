@@ -1,0 +1,10 @@
+market_id,market_name,latitude,longitude,state,tier,handling_fee_pct,cold_storage_capacity_tons
+MKT_MUM,Mumbai,19.0760,72.8777,Maharashtra,Tier-1,0.025,5000
+MKT_PUN,Pune,18.5204,73.8567,Maharashtra,Tier-1,0.020,3500
+MKT_HYD,Hyderabad,17.3850,78.4867,Telangana,Tier-1,0.022,4000
+MKT_BLR,Bengaluru,12.9716,77.5946,Karnataka,Tier-1,0.025,4800
+MKT_MAA,Chennai,13.0827,80.2707,Tamil Nadu,Tier-1,0.023,3800
+MKT_DEL,Delhi,28.6139,77.2090,Delhi,Tier-1,0.028,6500
+MKT_SUR,Surat,21.1702,72.8311,Gujarat,Tier-2,0.018,2500
+MKT_NSK,Nashik,19.9975,73.7898,Maharashtra,Tier-2,0.015,3000
+MKT_NGP,Nagpur,21.1458,79.0882,Maharashtra,Tier-2,0.019,2800

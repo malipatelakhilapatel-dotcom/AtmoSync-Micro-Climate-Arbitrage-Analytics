@@ -1,0 +1,47 @@
+version: 2
+
+models:
+  - name: int_container_health
+    description: "Evaluates current physical status, deviations from biological envelope, and alerts"
+    columns:
+      - name: container_id
+        tests:
+          - unique
+          - not_null
+      - name: temp_excursion_c
+        description: "Degrees Celsius container temperature deviates outside safe threshold"
+        tests:
+          - not_null
+
+  - name: int_spoilage_risk
+    description: "Calculates Spoilage Risk Score (0-100) and remaining shelf life hours"
+    columns:
+      - name: container_id
+        tests:
+          - unique
+          - not_null
+      - name: spoilage_risk_score
+        description: "Composite micro-climate deterioration score"
+        tests:
+          - not_null
+      - name: risk_category
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['Low Risk', 'Moderate Risk', 'High Risk', 'Critical Risk']
+      - name: time_to_spoilage_hours
+        tests:
+          - not_null
+
+  - name: int_market_options
+    description: "Cross-evaluates alternative market destinations against remaining shelf life and realizable revenue"
+    columns:
+      - name: container_id
+        tests:
+          - not_null
+      - name: candidate_market
+        tests:
+          - not_null
+      - name: net_realizable_value_inr
+        tests:
+          - not_null

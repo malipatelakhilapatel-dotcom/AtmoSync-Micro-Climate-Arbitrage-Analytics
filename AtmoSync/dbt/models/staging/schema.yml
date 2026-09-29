@@ -1,0 +1,75 @@
+version: 2
+
+sources:
+  - name: raw
+    database: "{{ env_var('SNOWFLAKE_DATABASE', 'ATMOSYNC_DB') }}"
+    schema: "{{ env_var('SNOWFLAKE_SCHEMA', 'RAW') }}"
+    tables:
+      - name: sensor_telemetry
+        description: "Raw streaming IoT container telemetry data"
+      - name: commodity_prices
+        description: "Raw commodity spot prices across wholesale terminals"
+      - name: markets
+        description: "Raw terminal markets reference table"
+      - name: routes
+        description: "Raw logistics corridors reference table"
+
+models:
+  - name: stg_sensor_telemetry
+    description: "Standardized and typed container telemetry with initial threshold alert flags"
+    columns:
+      - name: record_id
+        description: "Primary key for telemetry reading"
+        tests:
+          - not_null
+      - name: container_id
+        description: "Unique identifier for shipping container"
+        tests:
+          - not_null
+      - name: commodity
+        description: "Agricultural commodity being transported"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['Avocado', 'Banana', 'Tomato', 'Mango', 'Apple']
+      - name: temperature_c
+        description: "Internal container temperature in Celsius"
+        tests:
+          - not_null
+      - name: humidity_pct
+        description: "Internal container relative humidity percentage"
+        tests:
+          - not_null
+
+  - name: stg_commodity_prices
+    description: "Normalized wholesale commodity prices"
+    columns:
+      - name: market
+        tests:
+          - not_null
+      - name: commodity
+        tests:
+          - not_null
+      - name: price_per_kg
+        tests:
+          - not_null
+
+  - name: stg_markets
+    description: "Wholesale terminal markets metadata and coordinates"
+    columns:
+      - name: market_id
+        tests:
+          - unique
+          - not_null
+      - name: market_name
+        tests:
+          - unique
+          - not_null
+
+  - name: stg_routes
+    description: "Standard logistics corridors and transit times"
+    columns:
+      - name: route_id
+        tests:
+          - unique
+          - not_null
