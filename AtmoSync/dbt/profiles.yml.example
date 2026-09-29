@@ -1,0 +1,28 @@
+# dbt Connection Profile Configuration Template for Snowflake & Local Engines
+atmosync:
+  target: dev
+  outputs:
+    dev:
+      type: snowflake
+      account: "{{ env_var('SNOWFLAKE_ACCOUNT', 'xy12345.ap-south-1.aws') }}"
+      user: "{{ env_var('SNOWFLAKE_USER', 'atmosync_svc') }}"
+      password: "{{ env_var('SNOWFLAKE_PASSWORD', 'YourPasswordHere') }}"
+      role: "{{ env_var('SNOWFLAKE_ROLE', 'ATMOSYNC_ROLE') }}"
+      database: "{{ env_var('SNOWFLAKE_DATABASE', 'ATMOSYNC_DB') }}"
+      warehouse: "{{ env_var('SNOWFLAKE_WAREHOUSE', 'ATMOSYNC_WH') }}"
+      schema: "{{ env_var('SNOWFLAKE_SCHEMA', 'RAW') }}"
+      threads: 4
+      client_session_keep_alive: False
+      query_tag: atmosync_dbt_dev
+
+    prod:
+      type: snowflake
+      account: "{{ env_var('SNOWFLAKE_ACCOUNT', 'xy12345.ap-south-1.aws') }}"
+      user: "{{ env_var('SNOWFLAKE_USER', 'atmosync_prod') }}"
+      password: "{{ env_var('SNOWFLAKE_PASSWORD', 'ProdPasswordHere') }}"
+      role: ATMOSYNC_ROLE
+      database: ATMOSYNC_DB
+      warehouse: ATMOSYNC_WH
+      schema: ANALYTICS
+      threads: 8
+      client_session_keep_alive: False

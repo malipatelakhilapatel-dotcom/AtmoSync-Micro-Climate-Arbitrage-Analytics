@@ -1,0 +1,66 @@
+version: 2
+
+models:
+  - name: fct_spoilage_arbitrage
+    description: "Core fact mart: Evaluates spoilage arbitrage financial opportunities and recommended reroutes"
+    columns:
+      - name: container_id
+        description: "Primary key / container identifier"
+        tests:
+          - unique
+          - not_null
+      - name: commodity
+        tests:
+          - not_null
+      - name: spoilage_risk_score
+        tests:
+          - not_null
+      - name: risk_category
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['Low Risk', 'Moderate Risk', 'High Risk', 'Critical Risk']
+      - name: time_to_spoilage_hours
+        tests:
+          - not_null
+      - name: current_destination
+        tests:
+          - not_null
+      - name: recommended_destination
+        tests:
+          - not_null
+      - name: spoilage_arbitrage_inr
+        description: "Net positive financial gain from rerouting"
+        tests:
+          - not_null
+
+  - name: fct_container_health
+    description: "Time-series container telemetry health fact table"
+    columns:
+      - name: record_id
+        tests:
+          - unique
+          - not_null
+      - name: container_id
+        tests:
+          - not_null
+
+  - name: dim_container
+    description: "Container master dimension"
+    columns:
+      - name: container_id
+        tests:
+          - unique
+          - not_null
+
+  - name: dim_market
+    description: "Market terminal master dimension"
+    columns:
+      - name: market_id
+        tests:
+          - unique
+          - not_null
+      - name: market_name
+        tests:
+          - unique
+          - not_null

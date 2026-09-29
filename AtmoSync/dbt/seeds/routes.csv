@@ -1,0 +1,12 @@
+route_id,origin,destination,distance_km,estimated_transit_hours,toll_cost_inr,road_condition_index
+RT_NSK_MUM,Nashik,Mumbai,165.0,4.5,450.0,0.88
+RT_NSK_PUN,Nashik,Pune,210.0,5.5,520.0,0.85
+RT_NSK_SUR,Nashik,Surat,240.0,6.0,600.0,0.82
+RT_PUN_MUM,Pune,Mumbai,150.0,3.5,400.0,0.95
+RT_PUN_HYD,Pune,Hyderabad,560.0,11.0,1200.0,0.84
+RT_HYD_BLR,Hyderabad,Bengaluru,575.0,10.5,1300.0,0.90
+RT_BLR_MAA,Bengaluru,Chennai,350.0,7.0,850.0,0.92
+RT_DEL_MUM,Delhi,Mumbai,1400.0,28.0,3200.0,0.87
+RT_NGP_MUM,Nagpur,Mumbai,820.0,16.0,1800.0,0.86
+RT_NGP_HYD,Nagpur,Hyderabad,500.0,10.0,1100.0,0.85
+RT_SUR_MUM,Surat,Mumbai,280.0,6.0,650.0,0.89
