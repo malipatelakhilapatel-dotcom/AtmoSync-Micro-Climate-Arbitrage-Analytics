@@ -1,0 +1,121 @@
+{
+  "version": "1.0.0",
+  "dashboard_title": "AtmoSync — Micro-Climate Arbitrage Analytics",
+  "description": "Real-time shipping container IoT monitoring, spoilage risk scoring, and multi-market rerouting arbitrage decision engine.",
+  "css": "",
+  "metadata": {
+    "timed_refresh_immune_slices": [],
+    "expanded_slices": {},
+    "refresh_frequency": 30,
+    "default_filters": "{}",
+    "color_scheme": "supersetColors",
+    "native_filter_configuration": [
+      {
+        "id": "NATIVE_FILTER_CONTAINER",
+        "name": "Container ID",
+        "filterType": "filter_select",
+        "targets": [{"datasetId": 1, "column": {"name": "container_id"}}],
+        "cascadeParentIds": [],
+        "defaultValue": null,
+        "isInstant": true
+      },
+      {
+        "id": "NATIVE_FILTER_COMMODITY",
+        "name": "Commodity",
+        "filterType": "filter_select",
+        "targets": [{"datasetId": 1, "column": {"name": "commodity"}}],
+        "cascadeParentIds": [],
+        "defaultValue": null,
+        "isInstant": true
+      },
+      {
+        "id": "NATIVE_FILTER_RISK",
+        "name": "Risk Level",
+        "filterType": "filter_select",
+        "targets": [{"datasetId": 1, "column": {"name": "risk_category"}}],
+        "cascadeParentIds": [],
+        "defaultValue": null,
+        "isInstant": true
+      }
+    ]
+  },
+  "slices": [
+    {
+      "slice_name": "Active Fleet Size",
+      "viz_type": "big_number_total",
+      "params": {
+        "metric": "count_distinct_containers",
+        "subheader": "Active monitored units"
+      }
+    },
+    {
+      "slice_name": "Containers At Risk",
+      "viz_type": "big_number_total",
+      "params": {
+        "metric": "containers_at_risk",
+        "subheader": "High & Critical Risk"
+      }
+    },
+    {
+      "slice_name": "Total Spoilage Arbitrage",
+      "viz_type": "big_number_total",
+      "params": {
+        "metric": "total_arbitrage_opportunity_inr",
+        "subheader": "Net Realizable Benefit (INR)"
+      }
+    },
+    {
+      "slice_name": "Container Health Geospatial Map",
+      "viz_type": "deck_scatter",
+      "params": {
+        "spatial": {"type": "latlong", "lonCol": "longitude", "latCol": "latitude"},
+        "point_radius_fixed": {"type": "fix", "value": 25},
+        "color_picker": {"r": 239, "g": 68, "b": 68, "a": 1}
+      }
+    },
+    {
+      "slice_name": "Micro-Climate Temperature Trends",
+      "viz_type": "echarts_timeseries_line",
+      "params": {
+        "x_axis": "telemetry_timestamp",
+        "metrics": ["temperature_c"],
+        "groupby": ["container_id"]
+      }
+    },
+    {
+      "slice_name": "Micro-Climate Humidity Trends",
+      "viz_type": "echarts_timeseries_line",
+      "params": {
+        "x_axis": "telemetry_timestamp",
+        "metrics": ["humidity_pct"],
+        "groupby": ["container_id"]
+      }
+    },
+    {
+      "slice_name": "Spoilage Risk Leaderboard",
+      "viz_type": "echarts_timeseries_bar",
+      "params": {
+        "metrics": ["spoilage_risk_score"],
+        "groupby": ["container_id"]
+      }
+    },
+    {
+      "slice_name": "Real-Time Spoilage Arbitrage Matrix",
+      "viz_type": "table",
+      "params": {
+        "all_columns": [
+          "container_id",
+          "commodity",
+          "risk_category",
+          "time_to_spoilage_hours",
+          "current_destination",
+          "current_expected_value_inr",
+          "recommended_destination",
+          "reroute_expected_value_inr",
+          "spoilage_arbitrage_inr",
+          "recommendation_reason"
+        ]
+      }
+    }
+  ]
+}
