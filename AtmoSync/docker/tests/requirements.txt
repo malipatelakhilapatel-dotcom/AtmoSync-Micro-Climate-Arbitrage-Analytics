@@ -1,0 +1,26 @@
+# AtmoSync: Micro-Climate Arbitrage Analytics
+# Root Dependencies
+
+# Data Generation & Simulator
+faker>=24.0.0
+numpy>=1.26.0
+python-dotenv>=1.0.0
+pydantic>=2.6.0
+
+# Kafka Streaming
+# kafka-python-ng is pure Python and runs seamlessly across all OS & Python versions
+kafka-python-ng>=2.2.2
+confluent-kafka>=2.3.0; sys_platform != "win32"
+
+# Data Warehouse & Transformation
+snowflake-connector-python>=3.7.0
+dbt-core>=1.7.0
+dbt-snowflake>=1.7.0
+duckdb>=0.10.0
+
+# Testing & Utilities
+pytest>=8.0.0
+pytest-mock>=3.12.0
+requests>=2.31.0
+rich>=13.7.0
+tabulate>=0.9.0
