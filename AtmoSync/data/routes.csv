@@ -1,0 +1,11 @@
+origin,destination,distance_km,estimated_transit_hours,toll_charges_inr,road_condition_index
+Nashik,Mumbai,167,4.5,850,0.85
+Nashik,Pune,210,5.0,920,0.80
+Nashik,Delhi,1150,22.0,4200,0.78
+Pune,Mumbai,150,3.5,600,0.92
+Pune,Hyderabad,560,10.0,2100,0.75
+Mumbai,Pune,150,3.5,600,0.92
+Hyderabad,Bengaluru,570,10.5,2300,0.82
+Bengaluru,Chennai,348,6.5,1400,0.88
+Chennai,Bengaluru,348,6.5,1400,0.88
+Bengaluru,Hyderabad,570,10.5,2300,0.82

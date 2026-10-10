@@ -1,0 +1,8 @@
+market_id,market_name,latitude,longitude,state,storage_capacity_mt,tier
+MKT_NSK,Nashik,19.9975,73.7898,Maharashtra,15000,Origin
+MKT_BOM,Mumbai,19.0760,72.8777,Maharashtra,50000,Tier-1
+MKT_PNQ,Pune,18.5204,73.8567,Maharashtra,35000,Tier-1
+MKT_HYD,Hyderabad,17.3850,78.4867,Telangana,40000,Tier-1
+MKT_BLR,Bengaluru,12.9716,77.5946,Karnataka,45000,Tier-1
+MKT_MAA,Chennai,13.0827,80.2707,Tamil Nadu,38000,Tier-1
+MKT_DEL,Delhi,28.7041,77.1025,Delhi NCR,60000,Tier-1
