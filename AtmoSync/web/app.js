@@ -1,0 +1,1156 @@
+/**
+ * AtmoSync — Comprehensive Project Explainer & Operational Console Client
+ * Features:
+ *  1. Multi-view Tab Router (Overview, Architecture, Kinetics Lab, Live Tower, Team, Case Study)
+ *  2. Interactive Architecture Pipeline Flow Simulator & Code Contract Inspector
+ *  3. Biological Spoilage Kinetics & Multi-Market Arbitrage Sandbox Calculator
+ *  4. Real-time IoT Telematics Streaming, Leaflet GIS Map, Chart.js Visualizations
+ *  5. Emergency Reroute Execution & Incident Management
+ */
+
+// ============================================================================
+// GLOBAL STATE & VARIABLES
+// ============================================================================
+let autoStreamInterval = null;
+let leafletMap = null;
+let mapMarkers = {};
+let routePolylines = [];
+let tempChart = null;
+let humChart = null;
+let currentFleetData = [];
+let currentArbitrageData = [];
+let packetSimInterval = null;
+let activeSandboxCommodity = 'Avocado';
+
+// Commodity Biological Presets
+const COMMODITY_PRESETS = {
+  Avocado: {
+    temp_opt: 6.0,
+    temp_max: 8.0,
+    temp_crit: 12.0,
+    hum_opt: 90.0,
+    base_tts: 120.0,
+    typical_price: 185.0,
+    default_qty: 12000,
+  },
+  Banana: {
+    temp_opt: 14.0,
+    temp_max: 15.0,
+    temp_crit: 18.0,
+    hum_opt: 90.0,
+    base_tts: 96.0,
+    typical_price: 48.0,
+    default_qty: 15000,
+  },
+  Tomato: {
+    temp_opt: 12.0,
+    temp_max: 14.0,
+    temp_crit: 18.0,
+    hum_opt: 90.0,
+    base_tts: 144.0,
+    typical_price: 32.0,
+    default_qty: 10000,
+  },
+  Mango: {
+    temp_opt: 12.5,
+    temp_max: 14.0,
+    temp_crit: 17.0,
+    hum_opt: 88.0,
+    base_tts: 168.0,
+    typical_price: 95.0,
+    default_qty: 8000,
+  },
+  Apple: {
+    temp_opt: 2.0,
+    temp_max: 4.0,
+    temp_crit: 8.0,
+    hum_opt: 92.0,
+    base_tts: 720.0,
+    typical_price: 155.0,
+    default_qty: 14000,
+  },
+};
+
+// Architecture Layer Metadata Catalog
+const ARCH_LAYERS = {
+  layer1: {
+    title: 'Edge Telematics: Multi-Container IoT Simulator',
+    badge: 'LAYER 1',
+    owner: 'Member 1 (IoT & Kafka)',
+    tech: 'Python 3.10+, NumPy, Pydantic, State-Machine Models',
+    desc: 'Simulates 5 active refrigerated intermodal shipping containers ("reefers") transiting major Indian freight corridors (e.g. Nashik->Mumbai, Hyderabad->Bengaluru). Models realistic thermodynamic heat transfer, compressor valve failures, door-opening spikes, and road surface vibration shocks.',
+    inputContract: 'Reefer container physical internal state variables (compressor status, ambient weather)',
+    outputContract: 'Pydantic-validated SensorTelemetryEvent payload (Temp, Hum, Vib, GPS, Timestamp)',
+    latency: 'Event cycle generated every 2.0 seconds per container',
+    resilience: 'Edge memory buffer holds unsent packets during local connectivity dropouts.',
+    codeSnippet: `# simulator/iot_simulator.py
+event = SensorTelemetryEvent(
+    container_id=self.container_id,
+    shipment_id=self.shipment_id,
+    commodity=self.commodity,
+    temperature_c=round(self.temperature_c, 2),
+    humidity_pct=round(self.humidity_pct, 2),
+    vibration_g=round(self.vibration_g, 3),
+    latitude=round(lat, 5),
+    longitude=round(lon, 5),
+    origin=self.origin,
+    destination=self.destination,
+    quantity_kg=self.quantity_kg,
+    timestamp=datetime.now(timezone.utc)
+)`,
+  },
+  layer2: {
+    title: 'Streaming Broker: Apache Kafka (KRaft Mode)',
+    badge: 'LAYER 2',
+    owner: 'Member 1 (IoT & Kafka)',
+    tech: 'Apache Kafka 3.6+, KRaft (ZooKeeper-less), kafka-python, Docker Compose',
+    desc: 'Provides low-latency, fault-tolerant message streaming. The resilient producer publishes telemetry keyed by container_id to the partitioned `sensor-data` topic with exponential backoff retries. The streaming consumer validates schemas with Pydantic and dispatches anomalies to the `alerts` topic.',
+    inputContract: 'Raw JSON bytes from IoT producer over TCP port 9092',
+    outputContract: 'Validated JSON stream to Snowflake micro-batcher + high-priority alert events',
+    latency: 'Sub-50ms message delivery between producer and consumer',
+    resilience: 'Exponential backoff (up to 5 retries), dead-letter error queue, and local disk staging fallback.',
+    codeSnippet: `# kafka/producer.py & consumer.py
+# Producer with ACK=all & backoff
+producer.send("sensor-data", key=cid.encode(), value=payload)
+
+# Consumer Schema Guard
+try:
+    validated = SensorTelemetryEvent(**json_payload)
+except ValidationError as err:
+    log_dead_letter("Corrupted telemetry packet", err)`,
+  },
+  layer3: {
+    title: 'Analytical Warehouse: Snowflake Architecture',
+    badge: 'LAYER 3',
+    owner: 'Member 2 (Snowflake & dbt)',
+    tech: 'Snowflake Cloud Data Warehouse (ATMOSYNC_DB, ATMOSYNC_WH)',
+    desc: 'Structured into 3 isolated schemas: RAW, STAGING, and ANALYTICS. Micro-batches of validated telemetry are staged into `RAW.SENSOR_TELEMETRY`. Seed dimensions hold static Indian commodity prices, wholesale terminal coordinates, and highway freight corridors.',
+    inputContract: 'JSON micro-batches from Kafka consumer (or batch COPY INTO via external stage)',
+    outputContract: 'Columnar analytical tables with automated clustering on container_id and timestamp',
+    latency: 'Micro-batches loaded every 5 seconds (or on-demand during simulation)',
+    resilience: 'Time Travel retention (1 day), transaction rollback, local JSON file fallback if offline.',
+    codeSnippet: `-- snowflake/tables.sql
+CREATE TABLE IF NOT EXISTS RAW.SENSOR_TELEMETRY (
+    container_id VARCHAR(32) NOT NULL,
+    shipment_id VARCHAR(64) NOT NULL,
+    commodity VARCHAR(64) NOT NULL,
+    temperature_c FLOAT NOT NULL,
+    humidity_pct FLOAT NOT NULL,
+    vibration_g FLOAT NOT NULL,
+    latitude FLOAT NOT NULL,
+    longitude FLOAT NOT NULL,
+    origin VARCHAR(64) NOT NULL,
+    destination VARCHAR(64) NOT NULL,
+    quantity_kg INTEGER NOT NULL,
+    timestamp TIMESTAMP_NTZ NOT NULL,
+    ingested_at TIMESTAMP_NTZ DEFAULT CURRENT_TIMESTAMP()
+);`,
+  },
+  layer4: {
+    title: 'Transformation ELT: dbt Core Analytics Engine',
+    badge: 'LAYER 4',
+    owner: 'Member 2 (Snowflake & dbt)',
+    tech: 'dbt Core 1.7+, Modular SQL Models, Jinja Templating',
+    desc: 'Transforms raw telemetry into actionable decision matrices. Implements 3-period rolling moving averages, composite Spoilage Risk scoring (0–100), exponential Arrhenius Time-to-Spoilage ($TTS$), and a cross-product matrix calculating Spoilage Arbitrage across reachable Indian markets.',
+    inputContract: 'RAW.SENSOR_TELEMETRY + seed_commodity_prices + seed_routes + seed_markets',
+    outputContract: 'Gold Marts: `fct_spoilage_arbitrage` and `dim_container`',
+    latency: 'Refreshed incrementally every 1 to 5 minutes via Snowflake Tasks or scheduled CLI',
+    resilience: 'Automated dbt schema tests (not_null, unique, accepted_values, relationships).',
+    codeSnippet: `-- dbt/models/marts/fct_spoilage_arbitrage.sql
+SELECT
+    container_id,
+    commodity,
+    spoilage_risk_score,
+    time_to_spoilage_hours,
+    current_destination,
+    recommended_market,
+    net_arbitrage_inr,
+    CASE 
+        WHEN net_arbitrage_inr > 0 AND transit_hours <= time_to_spoilage_hours 
+             AND spoilage_risk_score >= 50 THEN 'EXECUTE_REROUTE'
+        WHEN net_arbitrage_inr > 0 THEN 'OPPORTUNITY_IDENTIFIED'
+        ELSE 'MAINTAIN_ROUTE'
+    END AS dispatch_directive
+FROM intermediate_arbitrage_calc;`,
+  },
+  layer5: {
+    title: 'BI & Trading Control Tower: Superset & Console',
+    badge: 'LAYER 5',
+    owner: 'Member 3 (Superset BI & Docs)',
+    tech: 'Apache Superset, Leaflet GIS, Chart.js, REST API, WebSocket/Polling',
+    desc: 'Delivers actionable intelligence directly to commodity traders and fleet dispatchers. Displays geospatial container corridors, multi-series thermal profiles, risk leaderboards, and an interactive Arbitrage Decision Matrix with 1-click rerouting authorization.',
+    inputContract: 'Snowflake Gold Mart `fct_spoilage_arbitrage` / Python REST Server `/api/data`',
+    outputContract: 'Interactive visual dashboards and dispatch webhook notifications (Slack/Email)',
+    latency: 'Real-time interactive dashboard refresh with auto-streaming',
+    resilience: 'Works 100% offline with standalone Python simulation server or connected to cloud warehouse.',
+    codeSnippet: `// superset/dashboard_export.json & web/app.js
+// Dispatcher executes instant reroute directive
+fetch('/api/reroute', {
+  method: 'POST',
+  body: JSON.stringify({ container_id: 'CONT_001' })
+}).then(res => res.json());`,
+  },
+};
+
+// ============================================================================
+// FORMATTING UTILITIES
+// ============================================================================
+const formatINR = (val) => {
+  return new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+    maximumFractionDigits: 0,
+  }).format(val || 0);
+};
+
+const getRiskClass = (tier) => {
+  switch (tier) {
+    case 'Critical': return 'badge-danger';
+    case 'High': return 'badge-warning';
+    case 'Moderate': return 'badge-warning';
+    default: return 'badge-normal';
+  }
+};
+
+const getProgressColor = (tier) => {
+  switch (tier) {
+    case 'Critical': return 'fill-danger';
+    case 'High': return 'fill-amber';
+    case 'Moderate': return 'fill-amber';
+    default: return 'fill-emerald';
+  }
+};
+
+// ============================================================================
+// TAB NAVIGATION CONTROLLER
+// ============================================================================
+function switchTab(targetTabId) {
+  // Update Tab buttons
+  document.querySelectorAll('.nav-tab').forEach((tab) => {
+    tab.classList.toggle('active', tab.getAttribute('data-tab') === targetTabId);
+  });
+
+  // Update Tab Panes
+  document.querySelectorAll('.tab-pane').forEach((pane) => {
+    pane.classList.toggle('active', pane.id === targetTabId);
+  });
+
+  // Update URL hash without jumping
+  if (history.replaceState) {
+    history.replaceState(null, null, `#${targetTabId.replace('tab-', '')}`);
+  }
+
+  // If switching to Live Console, trigger Leaflet & Chart size invalidations
+  if (targetTabId === 'tab-live-console') {
+    setTimeout(() => {
+      if (leafletMap) {
+        leafletMap.invalidateSize();
+      }
+      if (tempChart) tempChart.resize();
+      if (humChart) humChart.resize();
+    }, 150);
+  }
+
+  // If switching to Math Lab, trigger calculation
+  if (targetTabId === 'tab-math-lab') {
+    updateMathSandbox();
+  }
+}
+
+// Initial Tab Route from Hash
+function initTabRouter() {
+  const hash = window.location.hash.replace('#', '');
+  if (hash) {
+    const targetId = `tab-${hash}`;
+    if (document.getElementById(targetId)) {
+      switchTab(targetId);
+      return;
+    }
+  }
+  // Default to overview
+  switchTab('tab-overview');
+}
+
+// ============================================================================
+// ARCHITECTURE PIPELINE FLOW & PACKET SIMULATOR
+// ============================================================================
+function selectLayer(layerId) {
+  const layer = ARCH_LAYERS[layerId];
+  if (!layer) return;
+
+  // Highlight active stage card
+  document.querySelectorAll('.arch-stage-card').forEach((card) => {
+    card.classList.toggle('active-stage', card.id === `stage-${layerId}`);
+  });
+
+  // Update Detail Card Header
+  const titleEl = document.getElementById('layer-detail-title');
+  titleEl.innerHTML = `<span class="badge ${layerId === 'layer2' ? 'badge-indigo' : layerId === 'layer4' ? 'badge-warning' : layerId === 'layer5' ? 'badge-normal' : 'badge-cyan'}">${layer.badge}</span> ${layer.title}`;
+
+  document.getElementById('layer-detail-owner').textContent = `Owner: ${layer.owner}`;
+
+  // Update Detail Card Body
+  const bodyEl = document.getElementById('layer-detail-body');
+  bodyEl.innerHTML = `
+    <div class="layer-detail-row">
+      <span class="layer-detail-label">Technology &amp; Dependencies</span>
+      <span class="layer-detail-value" style="font-family: var(--font-mono); color: var(--color-cerulean);">${layer.tech}</span>
+    </div>
+    <div class="layer-detail-row">
+      <span class="layer-detail-label">Architectural Role</span>
+      <span class="layer-detail-value">${layer.desc}</span>
+    </div>
+    <div class="layer-detail-row">
+      <span class="layer-detail-label">Data Contracts</span>
+      <span class="layer-detail-value"><strong>Input:</strong> ${layer.inputContract}</span>
+      <span class="layer-detail-value" style="margin-top: 2px;"><strong>Output:</strong> ${layer.outputContract}</span>
+    </div>
+    <div class="layer-detail-row">
+      <span class="layer-detail-label">Performance SLA &amp; Fault Tolerance</span>
+      <span class="layer-detail-value"><strong>Latency:</strong> ${layer.latency}</span>
+      <span class="layer-detail-value" style="margin-top: 2px;"><strong>Resilience:</strong> ${layer.resilience}</span>
+    </div>
+  `;
+
+  // Update Code block to show sample snippet for this layer
+  document.getElementById('contract-code-display').innerHTML = `<code class="language-code">${escapeHtml(layer.codeSnippet)}</code>`;
+}
+
+function escapeHtml(text) {
+  const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+  return text.replace(/[&<>"']/g, (m) => map[m]);
+}
+
+function showContractView(type) {
+  document.querySelectorAll('.contract-tabs .btn').forEach((b) => b.classList.remove('active'));
+  const btn = document.getElementById(`btn-contract-${type}`);
+  if (btn) btn.classList.add('active');
+
+  const display = document.getElementById('contract-code-display');
+  if (type === 'json') {
+    display.innerHTML = `<code class="language-json">{
+  "container_id": "CONT_001",
+  "shipment_id": "SHIP_7894",
+  "commodity": "Avocado",
+  "temperature_c": 14.2,
+  "humidity_pct": 91.2,
+  "vibration_g": 0.18,
+  "latitude": 19.3412,
+  "longitude": 73.4521,
+  "origin": "Nashik",
+  "destination": "Mumbai",
+  "quantity_kg": 12000,
+  "timestamp": "2026-10-01T14:48:31.156Z"
+}</code>`;
+  } else if (type === 'sql') {
+    display.innerHTML = `<code class="language-sql">-- Snowflake DDL for RAW Staging
+CREATE OR REPLACE TABLE RAW.SENSOR_TELEMETRY (
+    container_id VARCHAR(32) NOT NULL,
+    shipment_id VARCHAR(64) NOT NULL,
+    commodity VARCHAR(64) NOT NULL,
+    temperature_c FLOAT NOT NULL,
+    humidity_pct FLOAT NOT NULL,
+    vibration_g FLOAT NOT NULL,
+    latitude FLOAT NOT NULL,
+    longitude FLOAT NOT NULL,
+    origin VARCHAR(64) NOT NULL,
+    destination VARCHAR(64) NOT NULL,
+    quantity_kg INTEGER NOT NULL,
+    timestamp TIMESTAMP_NTZ NOT NULL,
+    ingested_at TIMESTAMP_NTZ DEFAULT CURRENT_TIMESTAMP()
+);</code>`;
+  } else if (type === 'dbt') {
+    display.innerHTML = `<code class="language-sql">-- dbt Gold Mart: fct_spoilage_arbitrage.sql
+SELECT
+    container_id,
+    commodity,
+    spoilage_risk_score,
+    time_to_spoilage_hours,
+    current_destination,
+    recommended_market,
+    diversion_cost_inr,
+    net_arbitrage_inr,
+    directive
+FROM {{ ref('int_market_options') }}
+WHERE is_optimal_reroute = TRUE;</code>`;
+  }
+}
+
+function appendPipelineLog(timeStr, message, type = 'info') {
+  const logContainer = document.getElementById('pipeline-live-logs');
+  if (!logContainer) return;
+  const entry = document.createElement('div');
+  entry.className = `log-entry log-${type}`;
+  entry.innerHTML = `<span class="log-time">[${timeStr}]</span> ${message}`;
+  logContainer.appendChild(entry);
+  logContainer.scrollTop = logContainer.scrollHeight;
+}
+
+function triggerPacketSimulation() {
+  resetPacketSimulation();
+  const stages = ['layer1', 'layer2', 'layer3', 'layer4', 'layer5'];
+  let currentStep = 0;
+
+  appendPipelineLog(new Date().toTimeString().split(' ')[0], '▶ Commencing live telematics packet injection...', 'info');
+
+  packetSimInterval = setInterval(() => {
+    if (currentStep >= stages.length) {
+      clearInterval(packetSimInterval);
+      packetSimInterval = null;
+      appendPipelineLog(new Date().toTimeString().split(' ')[0], '✓ End-to-end pipeline trace complete: Directive EXECUTE_REROUTE issued.', 'success');
+      return;
+    }
+
+    const currentLayer = stages[currentStep];
+    selectLayer(currentLayer);
+
+    // Pulse current stage card
+    const stageEl = document.getElementById(`stage-${currentLayer}`);
+    if (stageEl) {
+      stageEl.classList.add('pulsing');
+      setTimeout(() => stageEl.classList.remove('pulsing'), 700);
+    }
+
+    // Pulse connector if not last
+    if (currentStep < 4) {
+      const connEl = document.getElementById(`conn-${currentStep + 1}`);
+      if (connEl) {
+        connEl.classList.add('pulsing');
+        setTimeout(() => connEl.classList.remove('pulsing'), 700);
+      }
+    }
+
+    const now = new Date().toTimeString().split(' ')[0];
+    if (currentStep === 0) {
+      appendPipelineLog(now, 'Layer 1: CONT_001 IoT sensor generated telematics: 14.2°C, 91.2% RH, 0.18G', 'info');
+    } else if (currentStep === 1) {
+      appendPipelineLog(now, 'Layer 2: Kafka broker received packet on `sensor-data`. Pydantic PASS. Alert dispatched to `alerts` topic!', 'alert');
+    } else if (currentStep === 2) {
+      appendPipelineLog(now, 'Layer 3: Snowflake micro-batch staging table RAW.SENSOR_TELEMETRY committed 1 record.', 'info');
+    } else if (currentStep === 3) {
+      appendPipelineLog(now, 'Layer 4: dbt models executed. Risk Score=67.4 (Critical), TTS=20.0h. Pune Arbitrage=+₹283,189.', 'alert');
+    } else if (currentStep === 4) {
+      appendPipelineLog(now, 'Layer 5: Decision Tower triggered incident banner: Reroute CONT_001 to Pune Terminal.', 'critical');
+    }
+
+    currentStep++;
+  }, 1000);
+}
+
+function resetPacketSimulation() {
+  if (packetSimInterval) {
+    clearInterval(packetSimInterval);
+    packetSimInterval = null;
+  }
+  document.querySelectorAll('.arch-stage-card').forEach((c) => c.classList.remove('pulsing'));
+  document.querySelectorAll('.arch-connector').forEach((c) => c.classList.remove('pulsing'));
+}
+
+// ============================================================================
+// KINETICS & ARBITRAGE MATHEMATICAL SANDBOX
+// ============================================================================
+function setSandboxCommodity(name) {
+  activeSandboxCommodity = name;
+  document.querySelectorAll('#comm-chips .chip').forEach((c) => {
+    c.classList.toggle('active', c.textContent.includes(name));
+  });
+
+  const preset = COMMODITY_PRESETS[name];
+  if (!preset) return;
+
+  // Set safe label
+  const safeLabel = document.getElementById('label-safe-temp');
+  if (safeLabel) {
+    safeLabel.textContent = `Safe: ${preset.temp_opt.toFixed(1)}°C – ${preset.temp_max.toFixed(1)}°C`;
+  }
+
+  updateMathSandbox();
+}
+
+function loadMathPreset(type) {
+  const tempSlider = document.getElementById('slider-temp');
+  const humSlider = document.getElementById('slider-hum');
+  const vibSlider = document.getElementById('slider-vib');
+  const alertsSlider = document.getElementById('slider-alerts');
+  const distSlider = document.getElementById('slider-dist');
+
+  if (type === 'optimal') {
+    setSandboxCommodity('Avocado');
+    tempSlider.value = 6.2;
+    humSlider.value = 90.0;
+    vibSlider.value = 0.08;
+    alertsSlider.value = 0;
+    distSlider.value = 145;
+  } else if (type === 'mild') {
+    setSandboxCommodity('Banana');
+    tempSlider.value = 16.5;
+    humSlider.value = 85.0;
+    vibSlider.value = 0.15;
+    alertsSlider.value = 1;
+    distSlider.value = 210;
+  } else if (type === 'cont001') {
+    setSandboxCommodity('Avocado');
+    tempSlider.value = 14.2;
+    humSlider.value = 91.5;
+    vibSlider.value = 0.18;
+    alertsSlider.value = 3;
+    distSlider.value = 145;
+  } else if (type === 'catastrophic') {
+    setSandboxCommodity('Tomato');
+    tempSlider.value = 22.0;
+    humSlider.value = 98.0;
+    vibSlider.value = 0.45;
+    alertsSlider.value = 5;
+    distSlider.value = 180;
+  }
+
+  updateMathSandbox();
+}
+
+function updateMathSandbox() {
+  const tempSlider = document.getElementById('slider-temp');
+  const humSlider = document.getElementById('slider-hum');
+  const vibSlider = document.getElementById('slider-vib');
+  const alertsSlider = document.getElementById('slider-alerts');
+  const distSlider = document.getElementById('slider-dist');
+
+  if (!tempSlider) return;
+
+  const tempVal = parseFloat(tempSlider.value);
+  const humVal = parseFloat(humSlider.value);
+  const vibVal = parseFloat(vibSlider.value);
+  const alertsVal = parseInt(alertsSlider.value, 10);
+  const distVal = parseFloat(distSlider.value);
+
+  // Update slider display tags
+  document.getElementById('val-slider-temp').textContent = `${tempVal.toFixed(1)} °C`;
+  document.getElementById('val-slider-hum').textContent = `${humVal.toFixed(1)} %`;
+  document.getElementById('val-slider-vib').textContent = `${vibVal.toFixed(2)} G`;
+  document.getElementById('val-slider-alerts').textContent = `${alertsVal} Alerts`;
+  document.getElementById('val-slider-dist').textContent = `${distVal} km`;
+
+  const specs = COMMODITY_PRESETS[activeSandboxCommodity];
+
+  // 1. Spoilage Penalties (as formulated in docs/business_logic.md)
+  const tempPenalty = Math.min(
+    45.0,
+    Math.max(0.0, ((tempVal - specs.temp_opt) / (specs.temp_crit - specs.temp_opt)) * 45.0)
+  );
+
+  const humPenalty = Math.min(
+    20.0,
+    Math.max(0.0, (Math.abs(humVal - 90.0) / 20.0) * 20.0)
+  );
+
+  const vibPenalty = Math.min(
+    15.0,
+    Math.max(0.0, ((vibVal - 0.10) / 0.35) * 15.0)
+  );
+
+  const expPenalty = Math.min(20.0, alertsVal * 4.0);
+
+  const totalRisk = Math.min(
+    100.0,
+    Math.max(0.0, Math.round((tempPenalty + humPenalty + vibPenalty + expPenalty) * 10) / 10)
+  );
+
+  // 2. Risk Level Categorization
+  let riskLevel = 'Low';
+  let badgeClass = 'badge-normal';
+  if (totalRisk >= 75.0) {
+    riskLevel = 'Critical';
+    badgeClass = 'badge-danger';
+  } else if (totalRisk >= 50.0) {
+    riskLevel = 'High';
+    badgeClass = 'badge-warning';
+  } else if (totalRisk >= 25.0) {
+    riskLevel = 'Moderate';
+    badgeClass = 'badge-warning';
+  }
+
+  // 3. Dynamic Time-to-Spoilage (TTS) Hours
+  const decayFactor = Math.max(0.05, 1.0 - totalRisk / 100.0);
+  const ttsHours = Math.max(1.0, Math.round(specs.base_tts * Math.pow(decayFactor, 1.6) * 10) / 10);
+
+  // Update Penalties DOM
+  document.getElementById('val-p-temp').textContent = `${tempPenalty.toFixed(1)} / 45 pts`;
+  document.getElementById('bar-p-temp').style.width = `${(tempPenalty / 45.0) * 100}%`;
+
+  document.getElementById('val-p-hum').textContent = `${humPenalty.toFixed(1)} / 20 pts`;
+  document.getElementById('bar-p-hum').style.width = `${(humPenalty / 20.0) * 100}%`;
+
+  document.getElementById('val-p-vib').textContent = `${vibPenalty.toFixed(1)} / 15 pts`;
+  document.getElementById('bar-p-vib').style.width = `${(vibPenalty / 15.0) * 100}%`;
+
+  document.getElementById('val-p-exp').textContent = `${expPenalty.toFixed(1)} / 20 pts`;
+  document.getElementById('bar-p-exp').style.width = `${(expPenalty / 20.0) * 100}%`;
+
+  // Update Risk & TTS DOM
+  document.getElementById('val-total-risk').textContent = `${totalRisk.toFixed(1)} / 100`;
+  document.getElementById('val-risk-category').textContent = `${riskLevel} Risk Tier`;
+
+  const riskBadge = document.getElementById('sandbox-risk-badge');
+  riskBadge.className = `badge ${badgeClass}`;
+  riskBadge.textContent = `${riskLevel} Risk`;
+
+  document.getElementById('val-dynamic-tts').textContent = `${ttsHours.toFixed(1)}h`;
+
+  // 4. Financial Arbitrage Calculations
+  const qty = specs.default_qty;
+  const currPrice = specs.typical_price;
+  const candPrice = Math.round(currPrice * 1.03); // slight premium or spot variance
+
+  const scheduledTransitHours = 8.5; // Mumbai standard route
+  const candTransitHours = Math.max(1.0, Math.round((distVal / 50.0) * 10) / 10); // ~50 km/h truck avg
+
+  // Scheduled route loss
+  let currLossPct = 0.0;
+  if (scheduledTransitHours > ttsHours) {
+    currLossPct = 0.80; // Total dock rejection write-off
+  } else {
+    currLossPct = Math.min(0.70, (totalRisk / 100.0) * 0.40);
+  }
+
+  // Candidate diversion loss
+  let candLossPct = 0.85;
+  const isViable = candTransitHours <= ttsHours;
+  if (isViable) {
+    if (candTransitHours <= ttsHours * 0.5) {
+      candLossPct = 0.10;
+    } else {
+      candLossPct = 0.25;
+    }
+  }
+
+  const rerouteHaulageCost = Math.round(distVal * 35.0 + 600.0);
+  const currExpValue = Math.round(qty * currPrice * (1.0 - currLossPct));
+  const rerouteExpValue = Math.round(qty * candPrice * (1.0 - candLossPct));
+  const netArbitrage = Math.round(rerouteExpValue - rerouteHaulageCost - currExpValue);
+
+  // Update Financial DOM
+  document.getElementById('val-curr-outcome').textContent = formatINR(currExpValue);
+  document.getElementById('val-curr-loss-note').textContent =
+    scheduledTransitHours > ttsHours ? '80% Dock Rejection Write-Off' : `${(currLossPct * 100).toFixed(0)}% Degradation Loss`;
+
+  document.getElementById('val-reroute-outcome').textContent = formatINR(rerouteExpValue);
+  document.getElementById('val-reroute-cost').textContent = formatINR(rerouteHaulageCost);
+
+  const netArbEl = document.getElementById('val-net-arbitrage');
+  const dirBadge = document.getElementById('sandbox-directive-badge');
+
+  if (netArbitrage > 0 && isViable && totalRisk >= 50.0) {
+    netArbEl.className = 'net-arb-value text-emerald';
+    netArbEl.textContent = `+${formatINR(netArbitrage)}`;
+    dirBadge.className = 'badge badge-normal';
+    dirBadge.textContent = 'EXECUTE_REROUTE';
+  } else if (netArbitrage > 0) {
+    netArbEl.className = 'net-arb-value text-cerulean';
+    netArbEl.textContent = `+${formatINR(netArbitrage)}`;
+    dirBadge.className = 'badge badge-cyan';
+    dirBadge.textContent = 'OPPORTUNITY_IDENTIFIED';
+  } else {
+    netArbEl.className = 'net-arb-value text-dim';
+    netArbEl.textContent = formatINR(netArbitrage);
+    dirBadge.className = 'badge badge-warning';
+    dirBadge.textContent = 'MAINTAIN_ROUTE';
+  }
+}
+
+// ============================================================================
+// LIVE OPERATIONAL CONSOLE: MAP, CHARTS & API INTEGRATION
+// ============================================================================
+function initMap() {
+  if (leafletMap) return;
+
+  const mapContainer = document.getElementById('geo-map');
+  if (!mapContainer) return;
+
+  // Center on Central/Western India freight corridor
+  leafletMap = L.map('geo-map', {
+    center: [18.8, 76.5],
+    zoom: 6,
+    zoomControl: true,
+  });
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap contributors',
+    maxZoom: 18,
+  }).addTo(leafletMap);
+}
+
+function updateMap(fleet, markets) {
+  if (!leafletMap) return;
+
+  // Clear previous layers
+  Object.values(mapMarkers).forEach((marker) => leafletMap.removeLayer(marker));
+  mapMarkers = {};
+  routePolylines.forEach((line) => leafletMap.removeLayer(line));
+  routePolylines = [];
+
+  // Draw Market Nodes
+  if (markets) {
+    Object.entries(markets).forEach(([name, coords]) => {
+      const circle = L.circleMarker([coords.lat, coords.lon], {
+        radius: 6,
+        fillColor: '#38bdf8',
+        color: '#0284c7',
+        weight: 1.5,
+        opacity: 0.8,
+        fillOpacity: 0.6,
+      }).addTo(leafletMap);
+
+      circle.bindTooltip(`<strong>${name} Ag Terminal</strong>`, {
+        permanent: false,
+        direction: 'top',
+      });
+      routePolylines.push(circle);
+    });
+  }
+
+  // Draw Container Locations & Routes
+  fleet.forEach((c) => {
+    let pinColor = '#10b981';
+    if (c.risk_level === 'Critical') pinColor = '#ef4444';
+    else if (c.risk_level === 'High' || c.risk_level === 'Moderate') pinColor = '#f59e0b';
+
+    const customIcon = L.divIcon({
+      className: 'custom-container-pin',
+      html: `
+        <div style="
+          width: 22px; 
+          height: 22px; 
+          background: ${pinColor}; 
+          border: 2px solid #ffffff; 
+          border-radius: 50%; 
+          display: flex; 
+          align-items: center; 
+          justify-content: center;
+          box-shadow: 0 0 14px ${pinColor};
+          color: #000;
+          font-weight: 800;
+          font-size: 10px;
+          font-family: var(--font-mono);
+        ">
+          ${c.container_id.replace('CONT_00', '')}
+        </div>
+      `,
+      iconSize: [22, 22],
+      iconAnchor: [11, 11],
+    });
+
+    const marker = L.marker([c.latitude, c.longitude], { icon: customIcon }).addTo(leafletMap);
+
+    const popupHtml = `
+      <div style="font-family: var(--font-body); font-size: 12px; min-width: 170px; line-height: 1.4;">
+        <strong style="color: #0284c7; font-size: 13px;">${c.container_id} (${c.commodity})</strong><br/>
+        <span>Route: <strong>${c.origin} &rarr; ${c.destination}</strong></span><br/>
+        <span>Temp: <strong>${c.temperature_c.toFixed(1)}°C</strong> | Hum: <strong>${c.humidity_pct.toFixed(1)}%</strong></span><br/>
+        <span>Risk: <strong style="color: ${pinColor}">${c.spoilage_risk_score} (${c.risk_level})</strong></span><br/>
+        <span>Shelf Life (TTS): <strong>${c.time_to_spoilage_hours}h</strong></span><br/>
+        <span>Action: <strong>${c.action}</strong></span>
+      </div>
+    `;
+    marker.bindPopup(popupHtml);
+    mapMarkers[c.container_id] = marker;
+
+    // Draw route vector to destination
+    if (markets && markets[c.destination.replace(' (Rerouted)', '')]) {
+      const destCoords = markets[c.destination.replace(' (Rerouted)', '')];
+      const poly = L.polyline(
+        [
+          [c.latitude, c.longitude],
+          [destCoords.lat, destCoords.lon],
+        ],
+        {
+          color: c.is_rerouted ? '#10b981' : pinColor,
+          weight: c.is_rerouted ? 3 : 2,
+          dashArray: c.is_rerouted ? null : '4, 6',
+          opacity: 0.65,
+        }
+      ).addTo(leafletMap);
+      routePolylines.push(poly);
+    }
+  });
+}
+
+function initCharts() {
+  const tempCtx = document.getElementById('tempChart');
+  const humCtx = document.getElementById('humChart');
+
+  if (!tempCtx || !humCtx) return;
+
+  const baseChartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    animation: { duration: 350 },
+    plugins: {
+      legend: {
+        position: 'top',
+        labels: {
+          color: '#94a3b8',
+          font: { family: 'Outfit', size: 11, weight: '500' },
+          boxWidth: 10,
+          boxHeight: 10,
+        },
+      },
+      tooltip: {
+        backgroundColor: 'rgba(15, 23, 42, 0.95)',
+        titleColor: '#f8fafc',
+        bodyColor: '#38bdf8',
+        borderColor: 'rgba(255, 255, 255, 0.1)',
+        borderWidth: 1,
+        bodyFont: { family: 'JetBrains Mono', size: 12 },
+      },
+    },
+    scales: {
+      x: {
+        grid: { color: 'rgba(255, 255, 255, 0.04)' },
+        ticks: { color: '#64748b', font: { family: 'JetBrains Mono', size: 10 } },
+      },
+      y: {
+        grid: { color: 'rgba(255, 255, 255, 0.06)' },
+        ticks: { color: '#64748b', font: { family: 'JetBrains Mono', size: 10 } },
+      },
+    },
+  };
+
+  tempChart = new Chart(tempCtx, {
+    type: 'line',
+    data: { labels: [], datasets: [] },
+    options: {
+      ...baseChartOptions,
+      scales: {
+        ...baseChartOptions.scales,
+        y: {
+          ...baseChartOptions.scales.y,
+          title: { display: true, text: 'Temperature (°C)', color: '#64748b' },
+          suggestedMin: 0,
+          suggestedMax: 20,
+        },
+      },
+    },
+  });
+
+  humChart = new Chart(humCtx, {
+    type: 'line',
+    data: { labels: [], datasets: [] },
+    options: {
+      ...baseChartOptions,
+      scales: {
+        ...baseChartOptions.scales,
+        y: {
+          ...baseChartOptions.scales.y,
+          title: { display: true, text: 'Relative Humidity (% RH)', color: '#64748b' },
+          suggestedMin: 80,
+          suggestedMax: 100,
+        },
+      },
+    },
+  });
+}
+
+function updateCharts(history) {
+  if (!tempChart || !humChart || !history) return;
+
+  const colors = {
+    CONT_001: '#ef4444',
+    CONT_002: '#f59e0b',
+    CONT_003: '#38bdf8',
+    CONT_004: '#6366f1',
+    CONT_005: '#10b981',
+  };
+
+  const cids = Object.keys(history);
+  if (cids.length === 0) return;
+
+  const maxLen = Math.max(...cids.map((id) => history[id].length));
+  const labels = Array.from({ length: maxLen }, (_, i) => `T-${maxLen - 1 - i}m`);
+
+  tempChart.data.labels = labels;
+  tempChart.data.datasets = cids.map((id) => ({
+    label: `${id}`,
+    data: history[id].map((h) => h.temp),
+    borderColor: colors[id] || '#00d2ff',
+    backgroundColor: 'transparent',
+    borderWidth: id === 'CONT_001' ? 2.5 : 1.5,
+    tension: 0.25,
+    pointRadius: 2,
+  }));
+  tempChart.update();
+
+  humChart.data.labels = labels;
+  humChart.data.datasets = cids.map((id) => ({
+    label: `${id}`,
+    data: history[id].map((h) => h.hum),
+    borderColor: colors[id] || '#00d2ff',
+    backgroundColor: 'transparent',
+    borderWidth: 1.5,
+    tension: 0.25,
+    pointRadius: 2,
+  }));
+  humChart.update();
+}
+
+function updateLeaderboard(fleet) {
+  const container = document.getElementById('leaderboard-container');
+  if (!container) return;
+
+  const sortedFleet = [...fleet].sort((a, b) => b.spoilage_risk_score - a.spoilage_risk_score);
+
+  container.innerHTML = sortedFleet
+    .map((c) => {
+      const riskClass = getRiskClass(c.risk_level);
+      const progColor = getProgressColor(c.risk_level);
+
+      return `
+      <div class="leaderboard-item">
+        <div class="item-left">
+          <span class="container-badge">${c.container_id}</span>
+          <div class="item-commodity">
+            <strong>${c.commodity}</strong> • ${c.destination}
+          </div>
+        </div>
+        <div class="item-right">
+          <div class="risk-progress-wrap">
+            <div class="progress-track">
+              <div class="progress-fill ${progColor}" style="width: ${c.spoilage_risk_score}%;"></div>
+            </div>
+            <div class="progress-label">
+              <span>Risk: <strong>${c.spoilage_risk_score}</strong></span>
+              <span>TTS: <strong>${c.time_to_spoilage_hours}h</strong></span>
+            </div>
+          </div>
+          <span class="badge ${riskClass}">${c.risk_level}</span>
+        </div>
+      </div>
+    `;
+    })
+    .join('');
+}
+
+function updateArbitrageTable(arbitrageList, fleet) {
+  const tbody = document.getElementById('arbitrage-table-body');
+  if (!tbody) return;
+
+  currentArbitrageData = arbitrageList;
+  const filterText = (document.getElementById('table-search')?.value || '').toLowerCase();
+
+  const fleetMap = {};
+  fleet.forEach((f) => (fleetMap[f.container_id] = f));
+
+  tbody.innerHTML = arbitrageList
+    .filter((a) => {
+      if (!filterText) return true;
+      return (
+        a.container_id.toLowerCase().includes(filterText) ||
+        a.commodity.toLowerCase().includes(filterText) ||
+        a.recommended_market.toLowerCase().includes(filterText)
+      );
+    })
+    .map((a) => {
+      const container = fleetMap[a.container_id] || {};
+      const riskTier = container.risk_level || 'Low';
+      const riskClass = getRiskClass(riskTier);
+
+      let directiveBadge = 'badge-normal';
+      if (a.directive === 'EXECUTE_REROUTE') directiveBadge = 'badge-danger';
+      else if (a.directive === 'OPPORTUNITY_IDENTIFIED') directiveBadge = 'badge-warning';
+      else if (a.directive === 'REROUTED') directiveBadge = 'badge-normal';
+
+      return `
+      <tr>
+        <td><strong>${a.container_id}</strong></td>
+        <td>${a.commodity}</td>
+        <td><code>${container.temperature_c?.toFixed(1) || 0}°C / ${container.humidity_pct?.toFixed(1) || 0}%</code></td>
+        <td><span class="badge ${riskClass}">${riskTier}</span></td>
+        <td><strong>${container.time_to_spoilage_hours || 'N/A'}h</strong></td>
+        <td>${a.current_destination}</td>
+        <td class="text-danger">${formatINR(a.potential_loss)}</td>
+        <td><strong class="text-cyan">${a.recommended_market}</strong></td>
+        <td>${formatINR(a.diversion_cost)}</td>
+        <td class="${a.net_arbitrage_inr > 0 ? 'text-emerald' : 'text-muted'}">
+          <strong>${a.net_arbitrage_inr > 0 ? '+' : ''}${formatINR(a.net_arbitrage_inr)}</strong>
+        </td>
+        <td>
+          <span class="badge ${directiveBadge}">${a.directive}</span>
+          ${
+            a.directive === 'EXECUTE_REROUTE'
+              ? `<button class="btn btn-danger-glow btn-sm" style="margin-left: 8px;" onclick="executeReroute('${a.container_id}')">Reroute</button>`
+              : ''
+          }
+        </td>
+      </tr>
+    `;
+    })
+    .join('');
+}
+
+function updateKPIs(kpis) {
+  if (!kpis) return;
+  document.getElementById('kpi-val-containers').textContent = kpis.total_containers;
+  document.getElementById('kpi-val-at-risk').textContent = kpis.at_risk_count;
+  document.getElementById('kpi-val-critical').textContent = kpis.critical_count;
+  document.getElementById('kpi-val-temp').textContent = `${kpis.average_temp_c}°C`;
+  document.getElementById('kpi-val-hum').textContent = `${kpis.average_humidity_pct}%`;
+  document.getElementById('kpi-val-loss-avoided').textContent = formatINR(kpis.total_loss_avoided_inr);
+  document.getElementById('kpi-val-arbitrage').textContent = formatINR(kpis.total_potential_arbitrage_inr);
+}
+
+function updateIncidentBanner(fleet, arbitrage) {
+  const banner = document.getElementById('incident-banner');
+  const bannerRisk = document.getElementById('banner-risk');
+  const bannerTts = document.getElementById('banner-tts');
+  const bannerBtn = document.getElementById('banner-reroute-btn');
+
+  if (!banner) return;
+
+  const cont1 = fleet.find((c) => c.container_id === 'CONT_001');
+  const arb1 = arbitrage.find((a) => a.container_id === 'CONT_001');
+
+  if (cont1 && cont1.is_rerouted) {
+    banner.style.display = 'flex';
+    banner.style.borderColor = '#10b981';
+    banner.style.background = 'rgba(16, 185, 129, 0.12)';
+    document.getElementById('banner-title').innerHTML =
+      `✅ CONT_001 DIVERSION EXECUTED: REROUTED TO PUNE TERMINAL`;
+    document.getElementById('banner-desc').innerHTML =
+      `Consignment of 12,000 kg Avocados diverted. Safe delivery guaranteed within remaining shelf life (${cont1.time_to_spoilage_hours}h). <strong>₹283,189</strong> net arbitrage preserved!`;
+    if (bannerBtn) {
+      bannerBtn.disabled = true;
+      bannerBtn.textContent = 'Diversion Active';
+      bannerBtn.className = 'btn btn-outline';
+    }
+  } else if (cont1 && cont1.risk_level === 'Critical') {
+    banner.style.display = 'flex';
+    if (bannerRisk) bannerRisk.textContent = `${cont1.spoilage_risk_score}/100`;
+    if (bannerTts) bannerTts.textContent = `${cont1.time_to_spoilage_hours}h`;
+    if (bannerBtn) {
+      bannerBtn.disabled = false;
+      bannerBtn.textContent = 'Authorize Pune Reroute';
+      bannerBtn.className = 'btn btn-danger-glow';
+    }
+  } else {
+    // Hidden or optimal
+    banner.style.display = 'none';
+  }
+}
+
+// ============================================================================
+// API DISPATCH ACTIONS
+// ============================================================================
+async function fetchConsoleData() {
+  try {
+    const res = await fetch('/api/data');
+    if (!res.ok) throw new Error('API request failed');
+    const data = await res.json();
+    renderDashboard(data);
+  } catch (err) {
+    console.warn('Backend API connection offline, utilizing initial state', err);
+  }
+}
+
+async function simulateStep() {
+  try {
+    const res = await fetch('/api/step', { method: 'POST' });
+    if (!res.ok) throw new Error('Step request failed');
+    const data = await res.json();
+    renderDashboard(data);
+  } catch (err) {
+    console.error('Failed to advance step', err);
+  }
+}
+
+async function executeReroute(containerId) {
+  try {
+    const res = await fetch('/api/reroute', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ container_id: containerId }),
+    });
+    if (!res.ok) throw new Error('Reroute request failed');
+    const data = await res.json();
+    renderDashboard(data);
+
+    // Switch to live console to visualize action if not already there
+    switchTab('tab-live-console');
+  } catch (err) {
+    console.error('Failed to execute reroute', err);
+  }
+}
+
+async function resetFleet() {
+  try {
+    const res = await fetch('/api/reset', { method: 'POST' });
+    if (!res.ok) throw new Error('Reset request failed');
+    const data = await res.json();
+    renderDashboard(data);
+  } catch (err) {
+    console.error('Failed to reset fleet', err);
+  }
+}
+
+function toggleAutoStream() {
+  const btn = document.getElementById('btn-stream');
+  const text = document.getElementById('stream-text');
+
+  if (autoStreamInterval) {
+    clearInterval(autoStreamInterval);
+    autoStreamInterval = null;
+    text.textContent = 'Auto Stream';
+    btn.classList.remove('btn-danger-glow');
+    btn.classList.add('btn-primary');
+  } else {
+    autoStreamInterval = setInterval(simulateStep, 2500);
+    text.textContent = 'Pause Stream';
+    btn.classList.remove('btn-primary');
+    btn.classList.add('btn-danger-glow');
+  }
+}
+
+function renderDashboard(data) {
+  if (!data) return;
+
+  const cycleBadge = document.getElementById('cycle-badge');
+  if (cycleBadge) cycleBadge.textContent = `Cycle #${data.cycle || 1}`;
+
+  currentFleetData = data.fleet || [];
+  currentArbitrageData = data.arbitrage || [];
+
+  updateKPIs(data.kpis);
+  updateIncidentBanner(data.fleet, data.arbitrage);
+  updateMap(data.fleet, data.markets);
+  updateLeaderboard(data.fleet);
+  updateCharts(data.history);
+  updateArbitrageTable(data.arbitrage, data.fleet);
+}
+
+// ============================================================================
+// INITIALIZATION ON DOM READY
+// ============================================================================
+document.addEventListener('DOMContentLoaded', () => {
+  // 1. Initialize Tabs
+  initTabRouter();
+
+  // 2. Initialize Layer 1 Detail Card by default
+  selectLayer('layer1');
+
+  // 3. Initialize Math Sandbox with Avocado preset
+  updateMathSandbox();
+
+  // 4. Initialize Map & Charts
+  initMap();
+  initCharts();
+
+  // 5. Connect Global Header Buttons
+  document.getElementById('btn-step')?.addEventListener('click', simulateStep);
+  document.getElementById('btn-stream')?.addEventListener('click', toggleAutoStream);
+  document.getElementById('btn-reset')?.addEventListener('click', resetFleet);
+
+  // 6. Connect Table Search Filter
+  document.getElementById('table-search')?.addEventListener('input', () => {
+    updateArbitrageTable(currentArbitrageData, currentFleetData);
+  });
+
+  // 7. Initial Data Fetch
+  fetchConsoleData();
+});

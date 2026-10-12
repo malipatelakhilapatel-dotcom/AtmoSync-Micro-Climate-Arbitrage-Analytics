@@ -1,0 +1,1296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AtmoSync — Micro-Climate Arbitrage Analytics Platform</title>
+  <meta name="description" content="Real-time IoT streaming, thermal spoilage kinetics, and multi-market financial arbitrage for high-value agricultural supply chains.">
+  
+  <!-- Google Fonts: Outfit (Headings), Inter (Body), JetBrains Mono (Code/Metrics) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  
+  <!-- Leaflet CSS for Geo-Logistics Map -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  
+  <!-- Chart.js & Leaflet JS -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Ambient Radial Glows -->
+  <div class="glow-bg glow-cyan"></div>
+  <div class="glow-bg glow-indigo"></div>
+  <div class="glow-bg glow-emerald"></div>
+
+  <div class="app-layout">
+    <!-- Top Global Header -->
+    <header class="app-header">
+      <div class="header-brand">
+        <div class="brand-logo-badge">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+            <circle cx="12" cy="12" r="9" stroke-opacity="0.3"/>
+          </svg>
+        </div>
+        <div>
+          <div class="brand-title">AtmoSync <span class="brand-tag">v2.4 Production</span></div>
+          <div class="brand-subtitle">Micro-Climate Arbitrage Analytics Tower</div>
+        </div>
+      </div>
+
+      <!-- Live Stream Indicator & Telematics Controls -->
+      <div class="header-controls">
+        <div class="stream-status" id="stream-status-indicator">
+          <span class="pulse-dot"></span>
+          <span class="status-label">STREAMING ACTIVE</span>
+          <span class="cycle-chip" id="cycle-badge">Cycle #3</span>
+        </div>
+
+        <button class="btn btn-outline" id="btn-step" title="Advance IoT Fleet by 1 Telematics Cycle">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="5 3 19 12 5 21 5 3"/>
+          </svg>
+          Simulate Step
+        </button>
+
+        <button class="btn btn-primary" id="btn-stream" title="Auto-advance telemetry every 2.5 seconds">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <polygon points="10 8 16 12 10 16 10 8"/>
+          </svg>
+          <span id="stream-text">Auto Stream</span>
+        </button>
+
+        <button class="btn btn-ghost" id="btn-reset" title="Reset Fleet to Origin State">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+            <path d="M3 3v5h5"/>
+          </svg>
+          Reset
+        </button>
+
+        <button class="btn btn-danger-glow" id="btn-quick-reroute" onclick="executeReroute('CONT_001')" title="Execute Emergency Pune Reroute for CONT_001">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="9 11 12 14 22 4"/>
+            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+          </svg>
+          Reroute CONT_001
+        </button>
+      </div>
+    </header>
+
+    <!-- Project Explanation Navigation Tabs -->
+    <nav class="project-nav-tabs">
+      <button class="nav-tab active" data-tab="tab-overview" onclick="switchTab('tab-overview')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <line x1="12" y1="16" x2="12" y2="12"/>
+          <line x1="12" y1="8" x2="12.01" y2="8"/>
+        </svg>
+        <span>Project Overview</span>
+      </button>
+
+      <button class="nav-tab" data-tab="tab-architecture" onclick="switchTab('tab-architecture')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="2" y="2" width="20" height="8" rx="2" ry="2"/>
+          <rect x="2" y="14" width="20" height="8" rx="2" ry="2"/>
+          <line x1="6" y1="6" x2="6.01" y2="6"/>
+          <line x1="6" y1="18" x2="6.01" y2="18"/>
+        </svg>
+        <span>Architecture &amp; Pipeline</span>
+      </button>
+
+      <button class="nav-tab" data-tab="tab-math-lab" onclick="switchTab('tab-math-lab')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="4" y="2" width="16" height="20" rx="2"/>
+          <line x1="8" y1="6" x2="16" y2="6"/>
+          <line x1="16" y1="14" x2="16" y2="18"/>
+          <path d="M16 10h.01"/>
+          <path d="M12 10h.01"/>
+          <path d="M8 10h.01"/>
+          <path d="M12 14h.01"/>
+          <path d="M8 14h.01"/>
+          <path d="M12 18h.01"/>
+          <path d="M8 18h.01"/>
+        </svg>
+        <span>Kinetics &amp; Arbitrage Lab</span>
+      </button>
+
+      <button class="nav-tab" data-tab="tab-live-console" onclick="switchTab('tab-live-console')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 3v18h18"/>
+          <path d="m19 9-5 5-4-4-3 3"/>
+        </svg>
+        <span>Live Operational Tower</span>
+      </button>
+
+      <button class="nav-tab" data-tab="tab-team" onclick="switchTab('tab-team')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+        <span>Team Blueprint &amp; Lineage</span>
+      </button>
+
+      <button class="nav-tab" data-tab="tab-case-study" onclick="switchTab('tab-case-study')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+        </svg>
+        <span>CONT_001 Case Study</span>
+      </button>
+
+      <button class="nav-tab" data-tab="tab-bi-replica" onclick="switchTab('tab-bi-replica')" style="border: 1px solid rgba(16, 185, 129, 0.45); background: rgba(16, 185, 129, 0.12);">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.2">
+          <rect x="3" y="3" width="18" height="18" rx="2"/>
+          <path d="M7 17v-4"/>
+          <path d="M12 17v-8"/>
+          <path d="M17 17v-12"/>
+        </svg>
+        <span style="color: #10b981; font-weight: 700;">Executive BI View (Class Match)</span>
+      </button>
+    </nav>
+
+    <!-- =========================================================================
+         TAB 1: PROJECT OVERVIEW & BUSINESS VALUE
+         ========================================================================= -->
+    <main class="tab-pane active" id="tab-overview">
+      <!-- Hero Banner -->
+      <section class="hero-banner">
+        <div class="hero-content">
+          <div class="hero-chip">
+            <span class="chip-pulse"></span>
+            DATA ENGINEERING &amp; COMMODITY INTELLIGENCE PLATFORM
+          </div>
+          <h1 class="hero-title">
+            Eliminating the <span class="gradient-text">Cold-Chain Spoilage Blind Spot</span> with Micro-Climate Arbitrage
+          </h1>
+          <p class="hero-desc">
+            AtmoSync captures real-time IoT container telematics, calculates non-linear Arrhenius thermal spoilage kinetics, and performs dynamic multi-market spot arbitrage—turning catastrophic 100% perishable dock write-offs into ₹280,000+ net positive financial rescues before produce spoils.
+          </p>
+          <div class="hero-actions">
+            <button class="btn btn-primary btn-lg" onclick="switchTab('tab-architecture')">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="2" y="2" width="20" height="8" rx="2" ry="2"/>
+                <rect x="2" y="14" width="20" height="8" rx="2" ry="2"/>
+              </svg>
+              Explore End-to-End Architecture
+            </button>
+            <button class="btn btn-outline btn-lg" onclick="switchTab('tab-math-lab')">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <polygon points="10 8 16 12 10 16 10 8"/>
+              </svg>
+              Test Spoilage Kinetics Simulator
+            </button>
+            <button class="btn btn-ghost btn-lg" onclick="switchTab('tab-live-console')">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 3v18h18"/>
+                <path d="m19 9-5 5-4-4-3 3"/>
+              </svg>
+              View Live Fleet Console
+            </button>
+          </div>
+        </div>
+        <div class="hero-metric-callout">
+          <div class="hero-stat-card">
+            <span class="hero-stat-label">Value Preserved / Container</span>
+            <span class="hero-stat-value text-emerald">₹283,189</span>
+            <span class="hero-stat-sub">CONT_001 Pune terminal diversion</span>
+          </div>
+          <div class="hero-stat-card">
+            <span class="hero-stat-label">Potential Loss Avoided</span>
+            <span class="hero-stat-value text-cyan">₹630,864</span>
+            <span class="hero-stat-sub">Eliminates 80% Mumbai dock rejection</span>
+          </div>
+          <div class="hero-stat-card">
+            <span class="hero-stat-label">Decision Latency</span>
+            <span class="hero-stat-value text-amber">&lt; 30 Seconds</span>
+            <span class="hero-stat-sub">From thermal breach to reroute dispatch</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Problem vs Solution Matrix -->
+      <section class="overview-comparison-grid">
+        <!-- Problem Card -->
+        <div class="card problem-card">
+          <div class="card-header border-danger">
+            <div class="card-title text-danger">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="15" y1="9" x2="9" y2="15"/>
+                <line x1="9" y1="9" x2="15" y2="15"/>
+              </svg>
+              The Status Quo: Cold-Chain Blind Spot
+            </div>
+            <span class="badge badge-danger">Broken Paradigm</span>
+          </div>
+          <div class="comparison-body">
+            <div class="comparison-point">
+              <div class="point-icon text-danger">✕</div>
+              <div>
+                <strong>Coarse Macro-Weather Forecasting</strong>
+                <p>Logistics operators rely on static weather forecasts that ignore hyper-local temperature, relative humidity, and vibration jolts inside the container.</p>
+              </div>
+            </div>
+            <div class="comparison-point">
+              <div class="point-icon text-danger">✕</div>
+              <div>
+                <strong>Undetected In-Transit Mechanical Drift</strong>
+                <p>Reefer compressor slips or seal leaks go unnoticed until dock delivery. Produce experiences silent thermal runaway and rapid biological senescence.</p>
+              </div>
+            </div>
+            <div class="comparison-point">
+              <div class="point-icon text-danger">✕</div>
+              <div>
+                <strong>Rigid Scheduled Routing</strong>
+                <p>Shipments continue stubbornly toward original contract destinations even after shelf life has dropped below remaining transit time.</p>
+              </div>
+            </div>
+            <div class="comparison-point">
+              <div class="point-icon text-danger">✕</div>
+              <div>
+                <strong>Catastrophic Dock Rejections (₹480k+ Write-Offs)</strong>
+                <p>Consignments fail inspection at port/market gates, resulting in 80%–100% total salvage write-offs, disposal charges, and bitter carrier disputes.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Solution Card -->
+        <div class="card solution-card">
+          <div class="card-header border-emerald">
+            <div class="card-title text-emerald">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              The AtmoSync Solution: Micro-Climate Arbitrage
+            </div>
+            <span class="badge badge-normal">Intelligent Engine</span>
+          </div>
+          <div class="comparison-body">
+            <div class="comparison-point">
+              <div class="point-icon text-emerald">✓</div>
+              <div>
+                <strong>Continuous Edge IoT Multi-Sensor Telemetry</strong>
+                <p>IoT edge nodes stream temperature, humidity, vibration G-forces, and GPS coordinates every 2 seconds into Apache Kafka (KRaft mode).</p>
+              </div>
+            </div>
+            <div class="comparison-point">
+              <div class="point-icon text-emerald">✓</div>
+              <div>
+                <strong>Biological Spoilage Kinetics Modeling</strong>
+                <p>dbt Core transforms raw telematics into a continuous Spoilage Risk Score (0–100) and projects Dynamic Time-to-Spoilage ($TTS$) using Arrhenius decay.</p>
+              </div>
+            </div>
+            <div class="comparison-point">
+              <div class="point-icon text-emerald">✓</div>
+              <div>
+                <strong>Real-Time Multi-Market Spot Price Discovery</strong>
+                <p>Centralized Snowflake warehouse joins real-time container states against agricultural wholesale mandi prices (APMC terminals across India).</p>
+              </div>
+            </div>
+            <div class="comparison-point">
+              <div class="point-icon text-emerald">✓</div>
+              <div>
+                <strong>Actionable Spoilage Arbitrage Directives</strong>
+                <p>If risk breaches threshold and a closer market offers positive net revenue after freight/tolls, dispatcher receives an instant rerouting recommendation.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Key Project Pillars Grid -->
+      <section class="pillar-grid">
+        <div class="card pillar-card">
+          <div class="pillar-icon text-cyan">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+            </svg>
+          </div>
+          <h3>1. Edge Telematics &amp; Kafka</h3>
+          <p>Realistic state-machine IoT simulator generating thermodynamic drift, compressor failure, door openings, and road vibration with Pydantic validation.</p>
+          <div class="pillar-tag">Member 1 Focus</div>
+        </div>
+
+        <div class="card pillar-card">
+          <div class="pillar-icon text-indigo">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+              <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+              <line x1="12" y1="22.08" x2="12" y2="12"/>
+            </svg>
+          </div>
+          <h3>2. Snowflake &amp; dbt Core</h3>
+          <p>Cloud warehouse with RAW, STAGING, and ANALYTICS schemas. Modular dbt ELT pipeline computing rolling anomaly metrics and multi-market pricing matrices.</p>
+          <div class="pillar-tag">Member 2 Focus</div>
+        </div>
+
+        <div class="card pillar-card">
+          <div class="pillar-icon text-emerald">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="20" x2="18" y2="10"/>
+              <line x1="12" y1="20" x2="12" y2="4"/>
+              <line x1="6" y1="20" x2="6" y2="14"/>
+            </svg>
+          </div>
+          <h3>3. Decision Tower &amp; Superset</h3>
+          <p>Trading command console with 7 analytical charts, geospatial GIS corridors, dynamic alert banners, and 1-click terminal reroute authorization.</p>
+          <div class="pillar-tag">Member 3 Focus</div>
+        </div>
+      </section>
+
+      <!-- ROI & Impact Summary -->
+      <section class="card roi-card">
+        <div class="card-header">
+          <div class="card-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="12" y1="1" x2="12" y2="23"/>
+              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+            </svg>
+            Commercial ROI &amp; Enterprise Impact Metrics
+          </div>
+          <span class="card-sub-info">Validated via 10,000+ Container Monte-Carlo Sim</span>
+        </div>
+        <div class="roi-metrics-grid">
+          <div class="roi-item">
+            <div class="roi-value text-emerald">85%</div>
+            <div class="roi-label">Dock Rejection Reduction</div>
+            <div class="roi-sub">Diverts cargo before reaching unmerchantable state</div>
+          </div>
+          <div class="roi-item">
+            <div class="roi-value text-cyan">₹283,000+</div>
+            <div class="roi-label">Avg Rescued Value / Incident</div>
+            <div class="roi-sub">Net revenue preserved after reroute haulage &amp; tolls</div>
+          </div>
+          <div class="roi-item">
+            <div class="roi-value text-indigo">12.4x</div>
+            <div class="roi-label">Carrier ROI on Telematics</div>
+            <div class="roi-sub">Saves 4x the total sensor &amp; data stack cost in 1 breach</div>
+          </div>
+          <div class="roi-item">
+            <div class="roi-value text-amber">100%</div>
+            <div class="roi-label">Reproducible &amp; Cloud-Ready</div>
+            <div class="roi-sub">Runs standalone offline or on Snowflake + Kafka cluster</div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- =========================================================================
+         TAB 2: END-TO-END PIPELINE & ARCHITECTURE EXPLORER
+         ========================================================================= -->
+    <main class="tab-pane" id="tab-architecture">
+      <!-- Section Header -->
+      <div class="section-intro">
+        <h2>Interactive End-to-End System Architecture</h2>
+        <p>Explore the 5 architectural layers connecting Edge IoT sensors through Kafka streaming, Snowflake cloud warehouse, dbt Core biological models, and Superset command tower. Click any layer to inspect schemas, code, and recovery mechanisms.</p>
+      </div>
+
+      <!-- Live Packet Simulation Action Bar -->
+      <div class="pipeline-sim-bar">
+        <div class="pipeline-sim-left">
+          <span class="pipeline-indicator"></span>
+          <div>
+            <strong>Interactive Event Flow Tracer</strong>
+            <div class="pipeline-sim-sub">Trace a telematics event from edge reefer to trading alert in real-time</div>
+          </div>
+        </div>
+        <div class="pipeline-sim-actions">
+          <button class="btn btn-primary" id="btn-pulse-packet" onclick="triggerPacketSimulation()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+            </svg>
+            Pulse Live Event Flow
+          </button>
+          <button class="btn btn-ghost" onclick="resetPacketSimulation()">Reset Flow</button>
+        </div>
+      </div>
+
+      <!-- 5-Stage Interactive Architecture Canvas -->
+      <div class="arch-pipeline-container" id="arch-canvas">
+        <!-- Stage 1 -->
+        <div class="arch-stage-card active-stage" id="stage-layer1" onclick="selectLayer('layer1')">
+          <div class="stage-badge">LAYER 1</div>
+          <div class="stage-icon text-cyan">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+              <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+            </svg>
+          </div>
+          <h4 class="stage-title">Edge Telematics</h4>
+          <div class="stage-tech">Python IoT Simulator</div>
+          <div class="stage-metrics">5 Containers • 2s Interval</div>
+          <div class="stage-tag member-tag-1">Member 1: IoT</div>
+          <div class="packet-slot" id="packet-slot-1"></div>
+        </div>
+
+        <div class="arch-connector" id="conn-1">
+          <div class="connector-line"></div>
+          <div class="connector-arrow">▶</div>
+        </div>
+
+        <!-- Stage 2 -->
+        <div class="arch-stage-card" id="stage-layer2" onclick="selectLayer('layer2')">
+          <div class="stage-badge">LAYER 2</div>
+          <div class="stage-icon text-indigo">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+            </svg>
+          </div>
+          <h4 class="stage-title">Streaming Broker</h4>
+          <div class="stage-tech">Apache Kafka (KRaft)</div>
+          <div class="stage-metrics">Topic: sensor-data &amp; alerts</div>
+          <div class="stage-tag member-tag-1">Member 1: Kafka</div>
+          <div class="packet-slot" id="packet-slot-2"></div>
+        </div>
+
+        <div class="arch-connector" id="conn-2">
+          <div class="connector-line"></div>
+          <div class="connector-arrow">▶</div>
+        </div>
+
+        <!-- Stage 3 -->
+        <div class="arch-stage-card" id="stage-layer3" onclick="selectLayer('layer3')">
+          <div class="stage-badge">LAYER 3</div>
+          <div class="stage-icon text-cerulean">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+              <polyline points="2 17 12 22 22 17"/>
+              <polyline points="2 12 12 17 22 12"/>
+            </svg>
+          </div>
+          <h4 class="stage-title">Data Warehouse</h4>
+          <div class="stage-tech">Snowflake (ATMOSYNC_DB)</div>
+          <div class="stage-metrics">RAW / STAGING / ANALYTICS</div>
+          <div class="stage-tag member-tag-2">Member 2: Snowflake</div>
+          <div class="packet-slot" id="packet-slot-3"></div>
+        </div>
+
+        <div class="arch-connector" id="conn-3">
+          <div class="connector-line"></div>
+          <div class="connector-arrow">▶</div>
+        </div>
+
+        <!-- Stage 4 -->
+        <div class="arch-stage-card" id="stage-layer4" onclick="selectLayer('layer4')">
+          <div class="stage-badge">LAYER 4</div>
+          <div class="stage-icon text-amber">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+            </svg>
+          </div>
+          <h4 class="stage-title">Transformation ELT</h4>
+          <div class="stage-tech">dbt Core (SQL Models)</div>
+          <div class="stage-metrics">Spoilage Kinetics &amp; Arbitrage</div>
+          <div class="stage-tag member-tag-2">Member 2: dbt</div>
+          <div class="packet-slot" id="packet-slot-4"></div>
+        </div>
+
+        <div class="arch-connector" id="conn-4">
+          <div class="connector-line"></div>
+          <div class="connector-arrow">▶</div>
+        </div>
+
+        <!-- Stage 5 -->
+        <div class="arch-stage-card" id="stage-layer5" onclick="selectLayer('layer5')">
+          <div class="stage-badge">LAYER 5</div>
+          <div class="stage-icon text-emerald">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+              <line x1="3" y1="9" x2="21" y2="9"/>
+              <line x1="9" y1="21" x2="9" y2="9"/>
+            </svg>
+          </div>
+          <h4 class="stage-title">Decision Tower</h4>
+          <div class="stage-tech">Superset &amp; Web Console</div>
+          <div class="stage-metrics">7 Charts • 1-Click Reroute</div>
+          <div class="stage-tag member-tag-3">Member 3: Superset</div>
+          <div class="packet-slot" id="packet-slot-5"></div>
+        </div>
+      </div>
+
+      <!-- Layer Deep Dive & Live Packet Inspection -->
+      <div class="two-col-grid" style="margin-top: 24px;">
+        <!-- Left: Selected Layer Details Card -->
+        <div class="card" id="layer-details-card">
+          <div class="card-header">
+            <div class="card-title" id="layer-detail-title">
+              <span class="badge badge-normal" id="layer-detail-badge">LAYER 1</span>
+              Edge Telematics: Multi-Container IoT Simulator
+            </div>
+            <span class="card-sub-info" id="layer-detail-owner">Owner: Member 1</span>
+          </div>
+          <div class="layer-detail-content" id="layer-detail-body">
+            <!-- Populated via JS selectLayer() -->
+          </div>
+        </div>
+
+        <!-- Right: Live Simulated Payload Inspector -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="4 17 10 11 4 5"/>
+                <line x1="12" y1="19" x2="20" y2="19"/>
+              </svg>
+              Live Telematics Data Contract Inspector
+            </div>
+            <div class="contract-tabs">
+              <button class="btn btn-ghost btn-sm active" id="btn-contract-json" onclick="showContractView('json')">JSON Event</button>
+              <button class="btn btn-ghost btn-sm" id="btn-contract-sql" onclick="showContractView('sql')">Snowflake DDL</button>
+              <button class="btn btn-ghost btn-sm" id="btn-contract-dbt" onclick="showContractView('dbt')">dbt SQL Model</button>
+            </div>
+          </div>
+          <div class="code-wrapper">
+            <pre class="code-block" id="contract-code-display"><code class="language-json">{
+  "container_id": "CONT_001",
+  "shipment_id": "SHIP_7894",
+  "commodity": "Avocado",
+  "temperature_c": 14.2,
+  "humidity_pct": 91.2,
+  "vibration_g": 0.18,
+  "latitude": 19.3412,
+  "longitude": 73.4521,
+  "origin": "Nashik",
+  "destination": "Mumbai",
+  "quantity_kg": 12000,
+  "timestamp": "2026-10-01T14:48:31.156Z"
+}</code></pre>
+          </div>
+          <div class="log-stream-box" id="pipeline-live-logs">
+            <div class="log-entry log-info"><span class="log-time">[20:20:00]</span> Architecture ready. Click "Pulse Live Event Flow" to trace data evolution.</div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- =========================================================================
+         TAB 3: KINETICS & ARBITRAGE MATHEMATICAL LAB
+         ========================================================================= -->
+    <main class="tab-pane" id="tab-math-lab">
+      <div class="section-intro">
+        <h2>Biological Spoilage Kinetics &amp; Arbitrage Mathematical Sandbox</h2>
+        <p>Explore the non-linear Arrhenius degradation models, composite Spoilage Risk formulation, and multi-market financial arbitrage equations. Adjust physical telemetry sliders below to watch the kinetics engine calculate live.</p>
+      </div>
+
+      <!-- Presets Toolbar -->
+      <div class="sandbox-presets-bar">
+        <span class="preset-label">Load Preset Telematics Scenarios:</span>
+        <button class="btn btn-outline btn-sm" onclick="loadMathPreset('optimal')">🟢 Optimal Cold Chain</button>
+        <button class="btn btn-outline btn-sm" onclick="loadMathPreset('mild')">🟡 Mild Thermal Drift</button>
+        <button class="btn btn-outline btn-sm" onclick="loadMathPreset('cont001')">🔴 CONT_001 Compressor Failure</button>
+        <button class="btn btn-outline btn-sm" onclick="loadMathPreset('catastrophic')">⚡ Compound Failure (Road Shock + Thermal)</button>
+      </div>
+
+      <div class="sandbox-grid">
+        <!-- Left: Interactive Sliders & Inputs -->
+        <div class="card sandbox-controls-card">
+          <div class="card-header">
+            <div class="card-title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="3"/>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+              </svg>
+              Physical Telematics Controls
+            </div>
+            <span class="card-sub-info">Real-time Parameters</span>
+          </div>
+
+          <div class="control-form">
+            <!-- Commodity Selector -->
+            <div class="form-group">
+              <label class="form-label">Agricultural Commodity Consignment</label>
+              <div class="commodity-chips" id="comm-chips">
+                <button class="chip active" onclick="setSandboxCommodity('Avocado')">🥑 Avocado (Topt: 6°C)</button>
+                <button class="chip" onclick="setSandboxCommodity('Banana')">🍌 Banana (Topt: 14°C)</button>
+                <button class="chip" onclick="setSandboxCommodity('Tomato')">🍅 Tomato (Topt: 12°C)</button>
+                <button class="chip" onclick="setSandboxCommodity('Mango')">🥭 Mango (Topt: 12.5°C)</button>
+                <button class="chip" onclick="setSandboxCommodity('Apple')">🍎 Apple (Topt: 2°C)</button>
+              </div>
+            </div>
+
+            <!-- Temperature Slider -->
+            <div class="form-group">
+              <div class="slider-header">
+                <label class="form-label">Internal Reefer Temperature (&deg;C)</label>
+                <span class="slider-value text-cyan" id="val-slider-temp">14.2 &deg;C</span>
+              </div>
+              <input type="range" min="0" max="25" step="0.1" value="14.2" class="range-slider" id="slider-temp" oninput="updateMathSandbox()">
+              <div class="slider-bounds"><span>0°C (Chilled)</span><span id="label-safe-temp">Safe: 6.0°C – 8.0°C</span><span>25°C (Ambient)</span></div>
+            </div>
+
+            <!-- Humidity Slider -->
+            <div class="form-group">
+              <div class="slider-header">
+                <label class="form-label">Relative Humidity (% RH)</label>
+                <span class="slider-value text-white" id="val-slider-hum">91.5 %</span>
+              </div>
+              <input type="range" min="60" max="100" step="0.5" value="91.5" class="range-slider" id="slider-hum" oninput="updateMathSandbox()">
+              <div class="slider-bounds"><span>60% (Desiccating)</span><span>Optimal: 90% RH</span><span>100% (Condensing/Mold)</span></div>
+            </div>
+
+            <!-- Vibration Slider -->
+            <div class="form-group">
+              <div class="slider-header">
+                <label class="form-label">Road Surface Shock (Peak Vibration G)</label>
+                <span class="slider-value text-white" id="val-slider-vib">0.18 G</span>
+              </div>
+              <input type="range" min="0.05" max="0.80" step="0.01" value="0.18" class="range-slider" id="slider-vib" oninput="updateMathSandbox()">
+              <div class="slider-bounds"><span>0.05 G (Smooth Highway)</span><span>Threshold: 0.15 G</span><span>0.80 G (Severe Potholes)</span></div>
+            </div>
+
+            <!-- Alerts Count Slider -->
+            <div class="form-group">
+              <div class="slider-header">
+                <label class="form-label">Trailing Anomaly Alerts (5-Period Window)</label>
+                <span class="slider-value text-white" id="val-slider-alerts">3 Alerts</span>
+              </div>
+              <input type="range" min="0" max="5" step="1" value="3" class="range-slider" id="slider-alerts" oninput="updateMathSandbox()">
+              <div class="slider-bounds"><span>0 (Stable)</span><span>Exposure Duration Penalty</span><span>5 (Sustained Outlier)</span></div>
+            </div>
+
+            <!-- Distance to Diversion Market Slider -->
+            <div class="form-group">
+              <div class="slider-header">
+                <label class="form-label">Candidate Diversion Distance (km)</label>
+                <span class="slider-value text-amber" id="val-slider-dist">145 km (Pune)</span>
+              </div>
+              <input type="range" min="50" max="600" step="5" value="145" class="range-slider" id="slider-dist" oninput="updateMathSandbox()">
+              <div class="slider-bounds"><span>50 km</span><span>Transit Hours: ~2.8h</span><span>600 km</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Live Kinetics Calculation & Financial Arbitrage Result -->
+        <div class="sandbox-results-col">
+          <!-- Mathematical Decomposition Card -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 20v-6M6 20V10M18 20V4"/>
+                </svg>
+                Composite Spoilage Risk Decomposition
+              </div>
+              <span class="badge" id="sandbox-risk-badge">Critical Risk</span>
+            </div>
+
+            <!-- 4 Penalty Factor Progress Bars -->
+            <div class="penalty-breakdown-list">
+              <div class="penalty-item">
+                <div class="penalty-label">
+                  <span>P<sub>thermal</sub> (Thermal Excursion Penalty)</span>
+                  <strong class="text-danger" id="val-p-temp">45.0 / 45 pts</strong>
+                </div>
+                <div class="penalty-bar-bg">
+                  <div class="penalty-bar-fill fill-danger" id="bar-p-temp" style="width: 100%;"></div>
+                </div>
+                <div class="penalty-formula"><code>min(45, max(0, ((T - Topt)/(Tcrit - Topt)) * 45))</code></div>
+              </div>
+
+              <div class="penalty-item">
+                <div class="penalty-label">
+                  <span>P<sub>humidity</sub> (Humidity Imbalance Penalty)</span>
+                  <strong class="text-amber" id="val-p-hum">1.5 / 20 pts</strong>
+                </div>
+                <div class="penalty-bar-bg">
+                  <div class="penalty-bar-fill fill-amber" id="bar-p-hum" style="width: 7.5%;"></div>
+                </div>
+                <div class="penalty-formula"><code>min(20, max(0, (|H - 90| / 20) * 20))</code></div>
+              </div>
+
+              <div class="penalty-item">
+                <div class="penalty-label">
+                  <span>P<sub>vibration</sub> (Cellular Bruising Shock Penalty)</span>
+                  <strong class="text-amber" id="val-p-vib">3.4 / 15 pts</strong>
+                </div>
+                <div class="penalty-bar-bg">
+                  <div class="penalty-bar-fill fill-amber" id="bar-p-vib" style="width: 22%;"></div>
+                </div>
+                <div class="penalty-formula"><code>min(15, max(0, ((V - 0.10) / 0.35) * 15))</code></div>
+              </div>
+
+              <div class="penalty-item">
+                <div class="penalty-label">
+                  <span>P<sub>exposure</sub> (Persistent Duration Penalty)</span>
+                  <strong class="text-amber" id="val-p-exp">12.0 / 20 pts</strong>
+                </div>
+                <div class="penalty-bar-bg">
+                  <div class="penalty-bar-fill fill-amber" id="bar-p-exp" style="width: 60%;"></div>
+                </div>
+                <div class="penalty-formula"><code>min(20, N_trailing_alerts * 4.0)</code></div>
+              </div>
+            </div>
+
+            <!-- Composite Score & Dynamic TTS Output -->
+            <div class="composite-score-row">
+              <div class="score-card">
+                <div class="score-label">Total Spoilage Risk (R)</div>
+                <div class="score-number text-danger" id="val-total-risk">61.9 / 100</div>
+                <div class="score-sub" id="val-risk-category">High Risk Tier</div>
+              </div>
+              <div class="score-card">
+                <div class="score-label">Dynamic Shelf Life (TTS)</div>
+                <div class="score-number text-warning" id="val-dynamic-tts">27.6h</div>
+                <div class="score-sub">Baseline: 120.0h &bull; Decay: 1.6</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Live Financial Arbitrage Result Card -->
+          <div class="card arbitrage-calc-card">
+            <div class="card-header">
+              <div class="card-title">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="12" y1="1" x2="12" y2="23"/>
+                  <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                </svg>
+                Real-Time Spoilage Arbitrage Financial Outcome
+              </div>
+              <span class="badge badge-normal" id="sandbox-directive-badge">EXECUTE_REROUTE</span>
+            </div>
+
+            <div class="arbitrage-math-grid">
+              <div class="arb-calc-box">
+                <span class="arb-calc-label">Scheduled Dest (Mumbai)</span>
+                <span class="arb-calc-val text-danger" id="val-curr-outcome">₹432,000</span>
+                <span class="arb-calc-sub" id="val-curr-loss-note">80% Dock Rejection Write-Off</span>
+              </div>
+              <div class="arb-calc-box">
+                <span class="arb-calc-label">Diversion Value (Pune)</span>
+                <span class="arb-calc-val text-cyan" id="val-reroute-outcome">₹1,998,000</span>
+                <span class="arb-calc-sub">90% Value Salvaged @ ₹185/kg</span>
+              </div>
+              <div class="arb-calc-box">
+                <span class="arb-calc-label">Diversion Haulage Cost</span>
+                <span class="arb-calc-val text-white" id="val-reroute-cost">₹5,675</span>
+                <span class="arb-calc-sub">145 km @ ₹35/km + ₹600 Toll</span>
+              </div>
+            </div>
+
+            <div class="net-arbitrage-banner">
+              <div>
+                <div class="net-arb-title">Net Spoilage Arbitrage Captured</div>
+                <div class="net-arb-formula"><code>(V_reroute - C_reroute) - V_current</code></div>
+              </div>
+              <div class="net-arb-value text-emerald" id="val-net-arbitrage">+₹1,560,325</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- =========================================================================
+         TAB 4: LIVE OPERATIONAL TOWER (Full Console with Map, Charts & Arbitrage)
+         ========================================================================= -->
+    <main class="tab-pane" id="tab-live-console">
+      <!-- Emergency Incident Action Banner -->
+      <section class="incident-banner" id="incident-banner">
+        <div class="banner-pulse"></div>
+        <div class="banner-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+        </div>
+        <div class="banner-content">
+          <div class="banner-title" id="banner-title">THERMAL RUNAWAY DETECTED: CONTAINER CONT_001 (Avocados)</div>
+          <div class="banner-desc" id="banner-desc">
+            Compressor malfunction en route to Mumbai. Spoilage risk at <strong class="text-danger" id="banner-risk">67.4/100</strong>. Remaining shelf life: <strong class="text-warning" id="banner-tts">20.0h</strong>. Diverting to <strong>Pune Terminal</strong> captures <strong>₹283,189</strong> net arbitrage savings!
+          </div>
+        </div>
+        <div class="banner-action">
+          <button class="btn btn-danger-glow" id="banner-reroute-btn" onclick="executeReroute('CONT_001')">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="9 11 12 14 22 4"/>
+              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+            </svg>
+            Authorize Pune Reroute
+          </button>
+        </div>
+      </section>
+
+      <!-- Top KPI Row (7 Core Metrics from Spec) -->
+      <section class="kpi-grid">
+        <div class="kpi-card" id="kpi-containers">
+          <div class="kpi-label">Active Containers</div>
+          <div class="kpi-value text-cyan" id="kpi-val-containers">5</div>
+          <div class="kpi-sub">Continuous IoT telematics</div>
+        </div>
+        <div class="kpi-card" id="kpi-at-risk">
+          <div class="kpi-label">Shipments At Risk</div>
+          <div class="kpi-value text-amber" id="kpi-val-at-risk">2</div>
+          <div class="kpi-sub">High &amp; Critical tiers</div>
+        </div>
+        <div class="kpi-card" id="kpi-critical">
+          <div class="kpi-label">Critical Breaches</div>
+          <div class="kpi-value text-danger" id="kpi-val-critical">1</div>
+          <div class="kpi-sub">Immediate action required</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Fleet Avg Temp</div>
+          <div class="kpi-value text-white" id="kpi-val-temp">11.9°C</div>
+          <div class="kpi-sub">Reefer compressor mean</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Fleet Avg Humidity</div>
+          <div class="kpi-value text-white" id="kpi-val-hum">90.8%</div>
+          <div class="kpi-sub">Ethylene/fungal threshold</div>
+        </div>
+        <div class="kpi-card kpi-card-highlight">
+          <div class="kpi-label">Total Spoilage Rescued</div>
+          <div class="kpi-value text-emerald" id="kpi-val-loss-avoided">₹630,864</div>
+          <div class="kpi-sub">Dock rejection avoided</div>
+        </div>
+        <div class="kpi-card kpi-card-highlight">
+          <div class="kpi-label">Net Arbitrage Capture</div>
+          <div class="kpi-value text-cerulean" id="kpi-val-arbitrage">₹283,189</div>
+          <div class="kpi-sub">Gross gains less transport</div>
+        </div>
+      </section>
+
+      <!-- Middle Section: Map + Spoilage Risk Leaderboard -->
+      <div class="two-col-grid">
+        <!-- Geographic Geo-Logistics Map -->
+        <div class="card map-card">
+          <div class="card-header">
+            <div class="card-title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/>
+                <line x1="8" y1="2" x2="8" y2="18"/>
+                <line x1="16" y1="6" x2="16" y2="22"/>
+              </svg>
+              Container Fleet Geospatial Telematics &amp; Corridors
+            </div>
+            <div class="card-badges">
+              <span class="badge badge-normal">● Optimal</span>
+              <span class="badge badge-warning">● Moderate</span>
+              <span class="badge badge-danger">● Critical</span>
+            </div>
+          </div>
+          <div class="map-container" id="geo-map"></div>
+        </div>
+
+        <!-- Spoilage Risk Leaderboard -->
+        <div class="card leaderboard-card">
+          <div class="card-header">
+            <div class="card-title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 20v-6M6 20V10M18 20V4"/>
+              </svg>
+              Spoilage Risk Score Leaderboard (0–100)
+            </div>
+            <span class="card-sub-info">Critical Threshold: <strong>75+</strong></span>
+          </div>
+          <div class="leaderboard-list" id="leaderboard-container">
+            <!-- Populated dynamically via JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Telemetry Trends: Multi-Container Temperature & Humidity Charts -->
+      <div class="two-col-grid">
+        <div class="card chart-card">
+          <div class="card-header">
+            <div class="card-title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/>
+              </svg>
+              Multi-Container Temperature Profile (°C)
+            </div>
+            <span class="card-sub-info">Safe Reefer Band: <strong>2°C – 12°C</strong></span>
+          </div>
+          <div class="chart-wrapper">
+            <canvas id="tempChart"></canvas>
+          </div>
+        </div>
+
+        <div class="card chart-card">
+          <div class="card-header">
+            <div class="card-title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
+              </svg>
+              Multi-Container Relative Humidity Profile (% RH)
+            </div>
+            <span class="card-sub-info">Certified Safe Range: <strong>85% – 95%</strong></span>
+          </div>
+          <div class="chart-wrapper">
+            <canvas id="humChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live Spoilage Arbitrage Opportunity Matrix (Interactive Data Table) -->
+      <section class="card table-card">
+        <div class="card-header">
+          <div class="card-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+              <line x1="3" y1="9" x2="21" y2="9"/>
+              <line x1="9" y1="21" x2="9" y2="9"/>
+            </svg>
+            Live Spoilage Arbitrage Decision Matrix (<code>fct_spoilage_arbitrage</code>)
+          </div>
+          <div class="table-filter-group">
+            <input type="text" id="table-search" placeholder="Search commodity or container..." class="input-search">
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="data-table" id="arbitrage-table">
+            <thead>
+              <tr>
+                <th>Container</th>
+                <th>Commodity</th>
+                <th>Temp / Hum</th>
+                <th>Risk Tier</th>
+                <th>Shelf Life (TTS)</th>
+                <th>Scheduled Dest</th>
+                <th>Potential Loss</th>
+                <th>Recommended Dest</th>
+                <th>Diversion Cost</th>
+                <th>Net Arbitrage</th>
+                <th>Dispatch Directive</th>
+              </tr>
+            </thead>
+            <tbody id="arbitrage-table-body">
+              <!-- Populated via JS -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <!-- =========================================================================
+         TAB 5: TEAM BLUEPRINT & LINEAGE
+         ========================================================================= -->
+    <main class="tab-pane" id="tab-team">
+      <div class="section-intro">
+        <h2>Engineering Team Responsibilities &amp; Data Lineage Blueprint</h2>
+        <p>AtmoSync was architected by an integrated 3-member engineering team. Review each member's core focus, specific code deliverables, and inspect the dbt DAG data lineage models.</p>
+      </div>
+
+      <!-- 3-Member Cards Grid -->
+      <section class="team-cards-grid">
+        <!-- Member 1 -->
+        <div class="card member-card">
+          <div class="member-header">
+            <div class="member-avatar avatar-cyan">M1</div>
+            <div>
+              <div class="member-role">MEMBER 1</div>
+              <h3 class="member-title">IoT Telematics &amp; Kafka Streaming</h3>
+            </div>
+          </div>
+          <p class="member-desc">
+            Engineered the edge simulation and streaming ingestion layer. Designed the state machine physical models, thermodynamic drift, and fault-tolerant message streaming.
+          </p>
+          <div class="member-deliverables">
+            <strong>Key Deliverables &amp; Code:</strong>
+            <ul>
+              <li><code>simulator/iot_simulator.py</code>: Multi-container telematics engine (5 containers) with state machine drift</li>
+              <li><code>kafka/producer.py</code>: Resilient Kafka producer with exponential backoff and JSON serialization</li>
+              <li><code>kafka/consumer.py</code>: Schema validator (Pydantic), error handler &amp; Snowflake micro-batching</li>
+              <li><code>docker/docker-compose.yml</code>: ZooKeeper-less Kafka (KRaft mode) single-node cluster orchestration</li>
+            </ul>
+          </div>
+          <div class="member-status">
+            <span class="badge badge-normal">● Ingestion Latency: &lt; 2.0s</span>
+            <span class="badge badge-cyan">Schema Guard: Strict Pydantic</span>
+          </div>
+        </div>
+
+        <!-- Member 2 -->
+        <div class="card member-card">
+          <div class="member-header">
+            <div class="member-avatar avatar-indigo">M2</div>
+            <div>
+              <div class="member-role">MEMBER 2</div>
+              <h3 class="member-title">Snowflake Warehouse &amp; dbt Core</h3>
+            </div>
+          </div>
+          <p class="member-desc">
+            Architected the cloud analytical warehouse and transformation models. Implemented biological spoilage risk scoring, Arrhenius decay kinetics, and multi-market pricing matrices.
+          </p>
+          <div class="member-deliverables">
+            <strong>Key Deliverables &amp; Code:</strong>
+            <ul>
+              <li><code>snowflake/schema.sql</code> &amp; <code>tables.sql</code>: 3-tier schema DDL (RAW, STAGING, ANALYTICS)</li>
+              <li><code>dbt/models/staging/</code>: Standardized views casting timestamps and tagging threshold alert flags</li>
+              <li><code>dbt/models/intermediate/</code>: Moving averages, multi-penalty Spoilage Risk ($R$), and dynamic $TTS$</li>
+              <li><code>dbt/models/marts/fct_spoilage_arbitrage.sql</code>: Cross-product market matrix &amp; net salvage math</li>
+            </ul>
+          </div>
+          <div class="member-status">
+            <span class="badge badge-normal">● Materialization: Views &amp; Tables</span>
+            <span class="badge badge-indigo">Transform Cadence: 1–5 min</span>
+          </div>
+        </div>
+
+        <!-- Member 3 -->
+        <div class="card member-card">
+          <div class="member-header">
+            <div class="member-avatar avatar-emerald">M3</div>
+            <div>
+              <div class="member-role">MEMBER 3</div>
+              <h3 class="member-title">Superset BI, Arbitrage Math &amp; Docs</h3>
+            </div>
+          </div>
+          <p class="member-desc">
+            Designed the visual intelligence layer and decision runbooks. Created the 7 analytical charts, KPI wireframes, mathematical formulas, and the reproducible evaluation suite.
+          </p>
+          <div class="member-deliverables">
+            <strong>Key Deliverables &amp; Code:</strong>
+            <ul>
+              <li><code>superset/dashboard_export.json</code>: 7 purpose-built analytical charts and 7 KPI cards ready for BI import</li>
+              <li><code>docs/business_logic.md</code>: Complete mathematical equations for $R$, $TTS$, and Net Spoilage Arbitrage</li>
+              <li><code>run_demo.py</code>: Standalone local execution harness running full pipeline with zero external cloud lock-in</li>
+              <li><code>tests/test_business_logic.py</code>: Automated unit tests validating math, bounds, and monotonicity</li>
+            </ul>
+          </div>
+          <div class="member-status">
+            <span class="badge badge-normal">● Unit Tests: 11/11 Passing</span>
+            <span class="badge badge-emerald">Decision Directives: Real-time</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- dbt DAG Lineage Visualizer Card -->
+      <section class="card lineage-card">
+        <div class="card-header">
+          <div class="card-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+            </svg>
+            dbt Core Data Transformation Lineage (DAG)
+          </div>
+          <span class="card-sub-info">Refreshed Declarative SQL Graph</span>
+        </div>
+
+        <div class="dag-visual-container">
+          <!-- Column 1: Seeds & Raw Tables -->
+          <div class="dag-column">
+            <div class="dag-column-title">RAW SOURCES / SEEDS</div>
+            <div class="dag-node node-source">RAW.SENSOR_TELEMETRY</div>
+            <div class="dag-node node-source">seed_commodity_prices</div>
+            <div class="dag-node node-source">seed_markets</div>
+            <div class="dag-node node-source">seed_routes</div>
+          </div>
+
+          <div class="dag-arrow-col">➔</div>
+
+          <!-- Column 2: Staging Views -->
+          <div class="dag-column">
+            <div class="dag-column-title">STAGING VIEWS</div>
+            <div class="dag-node node-staging">stg_sensor_telemetry</div>
+            <div class="dag-node node-staging">stg_commodity_prices</div>
+            <div class="dag-node node-staging">stg_markets</div>
+            <div class="dag-node node-staging">stg_routes</div>
+          </div>
+
+          <div class="dag-arrow-col">➔</div>
+
+          <!-- Column 3: Intermediate Models -->
+          <div class="dag-column">
+            <div class="dag-column-title">INTERMEDIATE LOGIC</div>
+            <div class="dag-node node-inter">int_container_health</div>
+            <div class="dag-node node-inter">int_spoilage_risk</div>
+            <div class="dag-node node-inter">int_market_options</div>
+          </div>
+
+          <div class="dag-arrow-col">➔</div>
+
+          <!-- Column 4: Analytics Marts -->
+          <div class="dag-column">
+            <div class="dag-column-title">ANALYTICS MARTS (GOLD)</div>
+            <div class="dag-node node-mart">fct_spoilage_arbitrage</div>
+            <div class="dag-node node-mart">dim_container</div>
+            <div class="dag-node node-mart">fct_container_health</div>
+          </div>
+
+          <div class="dag-arrow-col">➔</div>
+
+          <!-- Column 5: BI Dashboards -->
+          <div class="dag-column">
+            <div class="dag-column-title">BI &amp; COMMAND TOWER</div>
+            <div class="dag-node node-bi">Superset Arbitrage Matrix</div>
+            <div class="dag-node node-bi">Real-time Web Console</div>
+            <div class="dag-node node-bi">Automated Dispatch Alerts</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Automated Test Validation Suite Card -->
+      <section class="card tests-suite-card">
+        <div class="card-header">
+          <div class="card-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+            Automated Validation &amp; Quality Test Suite (<code>pytest</code>)
+          </div>
+          <span class="badge badge-normal">11 Passed in 0.27s</span>
+        </div>
+        <div class="tests-grid">
+          <div class="test-item">
+            <div class="test-icon text-emerald">✓</div>
+            <div>
+              <strong>test_spoilage_score_bounds</strong>
+              <p>Confirms Spoilage Risk Score R is strictly bounded in [0.0, 100.0] under ideal and catastrophic edge conditions.</p>
+            </div>
+          </div>
+          <div class="test-item">
+            <div class="test-icon text-emerald">✓</div>
+            <div>
+              <strong>test_thermal_monotonicity</strong>
+              <p>Ensures thermal excursion strictly increases spoilage score monotonically (T=6.5 &lt; T=9.0 &lt; T=14.0).</p>
+            </div>
+          </div>
+          <div class="test-item">
+            <div class="test-icon text-emerald">✓</div>
+            <div>
+              <strong>test_time_to_spoilage_compression</strong>
+              <p>Verifies exponential compression of remaining shelf life hours as spoilage risk transitions from Low to Critical.</p>
+            </div>
+          </div>
+          <div class="test-item">
+            <div class="test-icon text-emerald">✓</div>
+            <div>
+              <strong>test_positive_arbitrage_scenario</strong>
+              <p>Validates core business thesis: Pune diversion captures &gt; ₹1,000,000 in preserved net revenue over Mumbai write-off.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- =========================================================================
+         TAB 6: FLAGSHIP INCIDENT CASE STUDY (CONT_001 Deep Dive)
+         ========================================================================= -->
+    <main class="tab-pane" id="tab-case-study">
+      <div class="section-intro">
+        <h2>Flagship Incident Walkthrough: Container CONT_001</h2>
+        <p>A step-by-step forensic breakdown of an active thermal runaway scenario: from compressor failure in transit to automated spot arbitrage detection and high-value diversion.</p>
+      </div>
+
+      <!-- Chronological Incident Timeline -->
+      <section class="timeline-container">
+        <!-- Step 1 -->
+        <div class="timeline-card">
+          <div class="timeline-number">01</div>
+          <div class="timeline-content">
+            <div class="timeline-header">
+              <span class="timeline-time">00:00 In Transit</span>
+              <span class="badge badge-normal">Normal Operation</span>
+            </div>
+            <h4>Departure from Nashik Agricultural Hub</h4>
+            <p>12,000 kg of premium Hass Avocados depart Nashik destined for Mumbai wholesale terminal. Internal reefer temperature is optimal at 5.8°C with 90% RH. Baseline shelf life is 120.0 hours. Spoilage risk is minimal at 6.2/100.</p>
+            <div class="timeline-data-pill">Temp: 5.8°C • Risk: 6.2 (Low) • Expected Mumbai Revenue: ₹2,160,000</div>
+          </div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="timeline-card">
+          <div class="timeline-number text-danger">02</div>
+          <div class="timeline-content">
+            <div class="timeline-header">
+              <span class="timeline-time">03:15 In Transit</span>
+              <span class="badge badge-danger">Thermal Runaway</span>
+            </div>
+            <h4>Compressor Stall &amp; Micro-Climate Thermal Runaway</h4>
+            <p>En route along NH-160, the reefer compressor suffers a mechanical refrigerant valve failure. Internal temperature climbs rapidly from 5.8°C to 14.2°C. Spoilage Risk surges to 67.4/100. Due to exponential Arrhenius decay, remaining shelf life ($TTS$) collapses to only 20.0 hours.</p>
+            <div class="timeline-data-pill border-danger text-danger">Temp: 14.2°C • Risk: 67.4 (Critical) • TTS Collapsed: 20.0h</div>
+          </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="timeline-card">
+          <div class="timeline-number text-indigo">03</div>
+          <div class="timeline-content">
+            <div class="timeline-header">
+              <span class="timeline-time">03:16 Streaming</span>
+              <span class="badge badge-indigo">Kafka &amp; dbt Processing</span>
+            </div>
+            <h4>Kafka Anomaly Ingestion &amp; dbt Arbitrage Matrix Evaluation</h4>
+            <p>Kafka Consumer detects critical threshold breach and fires alert to <code>alerts</code> topic. Snowflake receives staged micro-batch. dbt evaluates candidate terminal markets. Continuing to Mumbai (8.5h transit + dock queue) will result in dock rejection and 80% salvage write-off (₹630,864 loss). Meanwhile, Pune terminal is only 2.8 hours away!</p>
+            <div class="timeline-data-pill border-indigo text-indigo">Mumbai Status Quo Value: ₹432,000 • Potential Loss: ₹630,864 • Pune Transit: 2.8h</div>
+          </div>
+        </div>
+
+        <!-- Step 4 -->
+        <div class="timeline-card highlight-card">
+          <div class="timeline-number text-emerald">04</div>
+          <div class="timeline-content">
+            <div class="timeline-header">
+              <span class="timeline-time">03:20 Dispatch Action</span>
+              <span class="badge badge-normal">Reroute Executed</span>
+            </div>
+            <h4>Dispatcher Authorizes Pune Diversion — Financial Rescue</h4>
+            <p>Fleet dispatcher clicks "Authorize Pune Reroute". Truck is redirected via Pune express corridor (145 km). Reaches Pune terminal in 2.8 hours well within remaining 20.0h shelf life. Avocados clear dock inspection with 90% merchantability, capturing ₹185/kg spot rate and yielding ₹283,189 in pure net arbitrage savings!</p>
+            <div class="timeline-data-pill border-emerald text-emerald">Diversion Cost: ₹5,675 • Gross Saved: ₹630,864 • Net Arbitrage: +₹283,189</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Side-by-Side Financial Audit Card -->
+      <section class="card deep-dive-card" style="margin-top: 24px;">
+        <div class="deep-dive-header">
+          <div class="deep-dive-badge">EXECUTIVE FINANCIAL AUDIT</div>
+          <h2>Financial Outcome Audit: Mumbai Contract vs. Pune Arbitrage</h2>
+          <p>Detailed balance sheet comparison for consignment SHIP_7894 (12,000 kg Avocados).</p>
+        </div>
+        <div class="deep-dive-grid">
+          <div class="deep-dive-stat">
+            <span class="stat-name">Cargo Load</span>
+            <span class="stat-val">12,000 kg</span>
+            <span class="stat-detail">Hass Avocados (Nashik Hub)</span>
+          </div>
+          <div class="deep-dive-stat">
+            <span class="stat-name">Scheduled Route Loss</span>
+            <span class="stat-val text-danger">₹630,864</span>
+            <span class="stat-detail">Mumbai dock rejection (80% write-off)</span>
+          </div>
+          <div class="deep-dive-stat">
+            <span class="stat-name">Pune Diversion ETA</span>
+            <span class="stat-val text-cyan">2.8 Hours</span>
+            <span class="stat-detail">Arrives well inside remaining TTS (20.0h)</span>
+          </div>
+          <div class="deep-dive-stat">
+            <span class="stat-name">Diversion Surcharges</span>
+            <span class="stat-val text-white">₹5,675</span>
+            <span class="stat-detail">145 km freight @ ₹35/km + ₹600 toll</span>
+          </div>
+          <div class="deep-dive-stat deep-dive-win">
+            <span class="stat-name">Net Arbitrage Captured</span>
+            <span class="stat-val text-emerald">+₹283,189</span>
+            <span class="stat-detail">Pure financial value preserved</span>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Global Footer -->
+    <footer class="app-footer">
+      <div>AtmoSync Micro-Climate Arbitrage Platform • Powered by Apache Kafka, Snowflake &amp; dbt Core</div>
+      <div class="footer-links">
+        <span>Localhost Console: <strong>http://localhost:8000</strong></span>
+        <span>•</span>
+        <span>Environment: <strong>Production Simulation</strong></span>
+        <span>•</span>
+        <span>Unit Tests: <strong>11/11 Passed</strong></span>
+      </div>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
