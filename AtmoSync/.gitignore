@@ -1,0 +1,69 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+.venv/
+ENV/
+env/
+
+# Environment variables & secrets (CRITICAL)
+.env
+*.env
+!.env.example
+secrets.yml
+profiles.yml
+!profiles.yml.example
+
+# dbt
+dbt/target/
+dbt/dbt_packages/
+dbt/logs/
+
+# Testing & coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Superset local state
+superset_home/
+*.sqlite
+*.db
+
+# IDE & OS files
+.idea/
+.vscode/
+.ipynb_checkpoints/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Kafka / Zookeeper state
+kafka-data/
+zookeeper-data/
