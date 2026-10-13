@@ -156,10 +156,21 @@
       </button>
     </nav>
 
+    <!-- Slide Deck Presentation Bar -->
+    <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 14px; margin-top: 6px; margin-bottom: 14px; font-size: 0.78rem; color: #94a3b8; background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px;">
+      <span>💡 <strong>Slide Deck Navigation:</strong> Click any slide tab above or press <kbd style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); padding: 1px 6px; border-radius: 4px; color: #38bdf8;">&larr;</kbd> and <kbd style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); padding: 1px 6px; border-radius: 4px; color: #38bdf8;">&rarr;</kbd> arrow keys to navigate slides smoothly.</span>
+      <span style="font-family: var(--font-mono); color: #00d2ff; font-weight: 700;">7 Interactive Slides</span>
+    </div>
+
     <!-- =========================================================================
          TAB 1: PROJECT OVERVIEW & BUSINESS VALUE
          ========================================================================= -->
     <main class="tab-pane active" id="tab-overview">
+      <div class="slide-badge">
+        <span class="slide-chip">SLIDE 1 OF 7</span>
+        <span>Project Overview &amp; Business Value</span>
+      </div>
+
       <!-- Hero Banner -->
       <section class="hero-banner">
         <div class="hero-content">
@@ -382,6 +393,20 @@
           </div>
         </div>
       </section>
+
+      <!-- Slide Nav Footer -->
+      <div class="slide-nav-footer">
+        <div class="slide-shortcut-hint">
+          <kbd>&larr;</kbd> <kbd>&rarr;</kbd> Use arrow keys to navigate slides
+        </div>
+        <div class="slide-indicator">
+          <span class="slide-chip">SLIDE 1 OF 7</span>
+          <span>Project Overview &amp; Business Value</span>
+        </div>
+        <button class="btn btn-primary" onclick="nextSlide()">
+          Next Slide: System Architecture &rarr;
+        </button>
+      </div>
     </main>
 
     <!-- =========================================================================
@@ -569,6 +594,18 @@
             <div class="log-entry log-info"><span class="log-time">[20:20:00]</span> Architecture ready. Click "Pulse Live Event Flow" to trace data evolution.</div>
           </div>
         </div>
+      </div>
+
+      <!-- Slide Nav Footer -->
+      <div class="slide-nav-footer">
+        <button class="btn btn-outline" onclick="prevSlide()">&larr; Previous Slide (Overview)</button>
+        <div class="slide-indicator">
+          <span class="slide-chip">SLIDE 2 OF 7</span>
+          <span>System Architecture &amp; Pipeline</span>
+        </div>
+        <button class="btn btn-primary" onclick="nextSlide()">
+          Next Slide: Kinetics Math Lab &rarr;
+        </button>
       </div>
     </main>
 
@@ -786,6 +823,18 @@
           </div>
         </div>
       </div>
+
+      <!-- Slide Nav Footer -->
+      <div class="slide-nav-footer">
+        <button class="btn btn-outline" onclick="prevSlide()">&larr; Previous Slide (Architecture)</button>
+        <div class="slide-indicator">
+          <span class="slide-chip">SLIDE 3 OF 7</span>
+          <span>Kinetics &amp; Arbitrage Math Lab</span>
+        </div>
+        <button class="btn btn-primary" onclick="nextSlide()">
+          Next Slide: Live Operational Tower &rarr;
+        </button>
+      </div>
     </main>
 
     <!-- =========================================================================
@@ -969,6 +1018,18 @@
           </table>
         </div>
       </section>
+
+      <!-- Slide Nav Footer -->
+      <div class="slide-nav-footer">
+        <button class="btn btn-outline" onclick="prevSlide()">&larr; Previous Slide (Math Lab)</button>
+        <div class="slide-indicator">
+          <span class="slide-chip">SLIDE 4 OF 7</span>
+          <span>Live Operational Tower &amp; GIS Map</span>
+        </div>
+        <button class="btn btn-primary" onclick="nextSlide()">
+          Next Slide: Team Blueprint &rarr;
+        </button>
+      </div>
     </main>
 
     <!-- =========================================================================
@@ -1171,6 +1232,18 @@
           </div>
         </div>
       </section>
+
+      <!-- Slide Nav Footer -->
+      <div class="slide-nav-footer">
+        <button class="btn btn-outline" onclick="prevSlide()">&larr; Previous Slide (Live Console)</button>
+        <div class="slide-indicator">
+          <span class="slide-chip">SLIDE 5 OF 7</span>
+          <span>Team Blueprint &amp; Lineage</span>
+        </div>
+        <button class="btn btn-primary" onclick="nextSlide()">
+          Next Slide: CONT_001 Case Study &rarr;
+        </button>
+      </div>
     </main>
 
     <!-- =========================================================================
@@ -1276,6 +1349,227 @@
           </div>
         </div>
       </section>
+
+      <!-- Slide Nav Footer -->
+      <div class="slide-nav-footer">
+        <button class="btn btn-outline" onclick="prevSlide()">&larr; Previous Slide (Team Blueprint)</button>
+        <div class="slide-indicator">
+          <span class="slide-chip">SLIDE 6 OF 7</span>
+          <span>CONT_001 Incident Case Study</span>
+        </div>
+        <button class="btn btn-primary" onclick="nextSlide()">
+          Next Slide: Executive BI View &rarr;
+        </button>
+      </div>
+    </main>
+
+    <!-- =========================================================================
+         TAB 7: EXECUTIVE BI VIEW (POWER BI / SUPERSET CLASS MATCH REPLICA)
+         ========================================================================= -->
+    <main class="tab-pane" id="tab-bi-replica">
+      <div class="slide-badge">
+        <span class="slide-chip">SLIDE 7 OF 7</span>
+        <span>Executive BI Decision Tower (Gold Analytics Marts)</span>
+      </div>
+
+      <div class="pbi-workspace">
+        <div class="pbi-window-titlebar">
+          <div class="pbi-window-left">
+            <span class="pbi-badge-pill">POWER BI DESKTOP REPLICA</span>
+            <strong>AtmoSync — Micro-Climate Spoilage Arbitrage Intelligence.pbix</strong>
+          </div>
+          <div style="font-size: 0.75rem; color: #94a3b8;">
+            DirectQuery &bull; Snowflake Gold Marts &bull; Refreshed Live
+          </div>
+        </div>
+
+        <div class="pbi-canvas-container">
+          <!-- Canvas Header Banner -->
+          <div class="pbi-canvas-header">
+            <div class="pbi-brand-box">AtmoSync</div>
+            <div class="pbi-title-group">
+              <h2>COLD-CHAIN ARBITRAGE DECISION TOWER</h2>
+              <h3>IoT Micro-Climate Spoilage Kinetics &amp; Dynamic Multi-Market Salvage Matrix</h3>
+            </div>
+            <div class="pbi-mode-pill">
+              <span class="pulse-dot" style="width: 7px; height: 7px;"></span>
+              Live DirectQuery
+            </div>
+          </div>
+
+          <!-- Main 2-Column Layout -->
+          <div class="pbi-main-layout">
+            <!-- Left Slicers Panel -->
+            <div class="pbi-slicers-panel">
+              <div class="pbi-panel-title">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+                </svg>
+                Report Slicers
+              </div>
+
+              <div class="pbi-slicer-group">
+                <label class="pbi-slicer-label">Filter Commodity</label>
+                <select class="pbi-select" id="pbi-filter-commodity" onchange="filterPbiData()">
+                  <option value="ALL">All Commodities (5)</option>
+                  <option value="Avocado">🥑 Avocado (CONT_001)</option>
+                  <option value="Banana">🍌 Banana (CONT_002)</option>
+                  <option value="Tomato">🍅 Tomato (CONT_003)</option>
+                  <option value="Mango">🥭 Mango (CONT_004)</option>
+                  <option value="Apple">🍎 Apple (CONT_005)</option>
+                </select>
+              </div>
+
+              <div class="pbi-slicer-group">
+                <label class="pbi-slicer-label">Risk Category</label>
+                <select class="pbi-select" id="pbi-filter-risk" onchange="filterPbiData()">
+                  <option value="ALL">All Risk Tiers</option>
+                  <option value="Critical">Critical Risk (≥ 75)</option>
+                  <option value="High">High Risk (50–74)</option>
+                  <option value="Moderate">Moderate Risk (25–49)</option>
+                  <option value="Low">Low Risk (&lt; 25)</option>
+                </select>
+              </div>
+
+              <div class="pbi-slicer-group">
+                <label class="pbi-slicer-label">Freight Corridors</label>
+                <div class="pbi-checkbox-list">
+                  <label class="pbi-checkbox-item"><input type="checkbox" checked onchange="filterPbiData()"> Nashik &rarr; Mumbai</label>
+                  <label class="pbi-checkbox-item"><input type="checkbox" checked onchange="filterPbiData()"> Nashik &rarr; Pune</label>
+                  <label class="pbi-checkbox-item"><input type="checkbox" checked onchange="filterPbiData()"> Hyderabad &rarr; BLR</label>
+                  <label class="pbi-checkbox-item"><input type="checkbox" checked onchange="filterPbiData()"> Bengaluru &rarr; Chennai</label>
+                  <label class="pbi-checkbox-item"><input type="checkbox" checked onchange="filterPbiData()"> Shimla &rarr; Delhi</label>
+                </div>
+              </div>
+
+              <div style="margin-top: auto; padding-top: 12px; border-top: 1px solid #e2e8f0; font-size: 0.72rem; color: #64748b;">
+                <strong>dbt Model Lineage:</strong><br>
+                <code>RAW.SENSOR_TELEMETRY</code> &rarr; <code>STG_TELEMETRY</code> &rarr; <code>FCT_SPOILAGE_ARBITRAGE</code>
+              </div>
+            </div>
+
+            <!-- Right Canvas Main -->
+            <div>
+              <!-- 5 Top KPI Cards -->
+              <div class="pbi-kpi-row">
+                <div class="pbi-kpi-card">
+                  <div class="pbi-kpi-title">Active Reefer Units</div>
+                  <div class="pbi-kpi-val" id="pbi-kpi-fleet">5</div>
+                  <div style="font-size: 0.7rem; color: #64748b; margin-top: 4px;">100% telemetry online</div>
+                </div>
+
+                <div class="pbi-kpi-card">
+                  <div class="pbi-kpi-title">Containers at Risk</div>
+                  <div class="pbi-kpi-val pbi-val-red" id="pbi-kpi-critical">1</div>
+                  <div style="font-size: 0.7rem; color: #dc2626; margin-top: 4px;">CONT_001 thermal breach</div>
+                </div>
+
+                <div class="pbi-kpi-card">
+                  <div class="pbi-kpi-title">Mean Reefer Temp</div>
+                  <div class="pbi-kpi-val" id="pbi-kpi-temp">11.8 °C</div>
+                  <div style="font-size: 0.7rem; color: #64748b; margin-top: 4px;">Fleet weighted average</div>
+                </div>
+
+                <div class="pbi-kpi-card">
+                  <div class="pbi-kpi-title">Mumbai Default Loss</div>
+                  <div class="pbi-kpi-val pbi-val-gold" id="pbi-kpi-loss">₹630,864</div>
+                  <div style="font-size: 0.7rem; color: #d97706; margin-top: 4px;">Dock rejection risk</div>
+                </div>
+
+                <div class="pbi-kpi-card pbi-card-green">
+                  <div class="pbi-kpi-title">Net Arbitrage Saved</div>
+                  <div class="pbi-kpi-val" id="pbi-kpi-saved">+₹283,189</div>
+                  <div style="font-size: 0.7rem; color: rgba(255,255,255,0.85); margin-top: 4px;">Pune emergency salvage</div>
+                </div>
+              </div>
+
+              <!-- 4 Visualizations Grid -->
+              <div class="pbi-visuals-grid">
+                <!-- Visual 1: Financial Arbitrage by Container -->
+                <div class="pbi-chart-card">
+                  <div class="pbi-chart-header">
+                    <span class="pbi-chart-title">Visual 1: Potential Spoilage Loss vs. Net Arbitrage Salvaged (INR ₹)</span>
+                    <span style="font-size: 0.7rem; color: #64748b;">Clustered Column Chart</span>
+                  </div>
+                  <div class="pbi-chart-canvas-wrap">
+                    <canvas id="pbiChartArbitrage"></canvas>
+                  </div>
+                </div>
+
+                <!-- Visual 2: Arrhenius Thermal Decay vs. Remaining Shelf Life -->
+                <div class="pbi-chart-card">
+                  <div class="pbi-chart-header">
+                    <span class="pbi-chart-title">Visual 2: Arrhenius Degradation Kinetics &amp; Dynamic TTS (Hours)</span>
+                    <span style="font-size: 0.7rem; color: #64748b;">Line &amp; Area Chart</span>
+                  </div>
+                  <div class="pbi-chart-canvas-wrap">
+                    <canvas id="pbiChartDegradation"></canvas>
+                  </div>
+                </div>
+
+                <!-- Visual 3: Mandi Terminal Wholesale Spot Prices -->
+                <div class="pbi-chart-card">
+                  <div class="pbi-chart-header">
+                    <span class="pbi-chart-title">Visual 3: Indian APMC Mandi Spot Prices by Reachable Market (₹/kg)</span>
+                    <span style="font-size: 0.7rem; color: #64748b;">Multi-Bar Comparators</span>
+                  </div>
+                  <div class="pbi-chart-canvas-wrap">
+                    <canvas id="pbiChartMandi"></canvas>
+                  </div>
+                </div>
+
+                <!-- Visual 4: Dispatch Action Matrix Table -->
+                <div class="pbi-chart-card">
+                  <div class="pbi-chart-header">
+                    <span class="pbi-chart-title">Visual 4: Live Fleet Dispatch Directives Matrix (Gold Mart)</span>
+                    <span style="font-size: 0.7rem; color: #64748b;">fct_spoilage_arbitrage</span>
+                  </div>
+                  <div style="overflow-x: auto; max-height: 230px;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 0.75rem; text-align: left;">
+                      <thead>
+                        <tr style="background: #f1f5f9; border-bottom: 2px solid #cbd5e1; color: #334155;">
+                          <th style="padding: 6px 8px;">Container</th>
+                          <th style="padding: 6px 8px;">Commodity</th>
+                          <th style="padding: 6px 8px;">Origin &rarr; Dest</th>
+                          <th style="padding: 6px 8px;">Risk</th>
+                          <th style="padding: 6px 8px;">TTS</th>
+                          <th style="padding: 6px 8px;">Optimal Market</th>
+                          <th style="padding: 6px 8px;">Net Arbitrage</th>
+                          <th style="padding: 6px 8px;">Directive</th>
+                        </tr>
+                      </thead>
+                      <tbody id="pbi-table-body">
+                        <!-- Populated dynamically via JS -->
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bottom Sheet Navigation Bar -->
+        <div class="pbi-sheets-footer">
+          <div class="pbi-sheets-tabs">
+            <button class="pbi-sheet-tab active" id="pbi-tab-exec" onclick="switchPbiSheet('exec')">1. Executive Summary</button>
+            <button class="pbi-sheet-tab" id="pbi-tab-environ" onclick="switchPbiSheet('environ')">2. Environmental Telematics</button>
+            <button class="pbi-sheet-tab" id="pbi-tab-logistics" onclick="switchPbiSheet('logistics')">3. Logistics &amp; Arbitrage</button>
+            <button class="pbi-sheet-tab" id="pbi-tab-marts" onclick="switchPbiSheet('marts')">4. Snowflake dbt Marts</button>
+          </div>
+          <div class="pbi-sheets-pagination">Page 1 of 4 &bull; DirectQuery 60s TTL</div>
+        </div>
+      </div>
+
+      <!-- Slide Nav Footer -->
+      <div class="slide-nav-footer">
+        <button class="btn btn-outline" onclick="prevSlide()">&larr; Previous Slide (CONT_001 Case Study)</button>
+        <div class="slide-indicator">
+          <span class="slide-chip">SLIDE 7 OF 7</span>
+          <span>Executive BI Decision Tower</span>
+        </div>
+        <button class="btn btn-primary" onclick="switchTab('tab-overview')">Return to Slide 1 (Overview) &circlearrowright;</button>
+      </div>
     </main>
 
     <!-- Global Footer -->

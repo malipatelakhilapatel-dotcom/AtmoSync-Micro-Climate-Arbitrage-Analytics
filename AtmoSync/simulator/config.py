@@ -140,3 +140,110 @@ CONTAINER_FLEET: List[Dict[str, Any]] = [
         "behavior": "nominal",  # Healthy control container
     },
 ]
+
+# -------------------------------------------------------------------------
+# Spoilage Kinetics & Market Wholesale Configuration (INR Metric)
+# -------------------------------------------------------------------------
+COMMODITY_SPECS: Dict[str, Dict[str, Any]] = {
+    "Avocado": {
+        "temp_opt": 6.0,
+        "temp_min": 4.0,
+        "temp_max": 8.0,
+        "temp_critical": 12.0,
+        "optimal_temp_min": 4.5,
+        "optimal_temp_max": 7.5,
+        "humidity_min": 80.0,
+        "humidity_max": 95.0,
+        "min_acceptable_humidity": 80.0,
+        "max_acceptable_humidity": 95.0,
+        "vibration_max": 0.25,
+        "base_shelf_life_hours": 120.0,
+        "baseline_shelf_life_hours": 120.0,
+        "typical_market_price_inr": 185.0,
+    },
+    "Banana": {
+        "temp_opt": 14.0,
+        "temp_min": 13.0,
+        "temp_max": 15.0,
+        "temp_critical": 18.0,
+        "optimal_temp_min": 13.0,
+        "optimal_temp_max": 15.0,
+        "humidity_min": 85.0,
+        "humidity_max": 95.0,
+        "min_acceptable_humidity": 85.0,
+        "max_acceptable_humidity": 95.0,
+        "vibration_max": 0.20,
+        "base_shelf_life_hours": 96.0,
+        "baseline_shelf_life_hours": 96.0,
+        "typical_market_price_inr": 48.0,
+    },
+    "Tomato": {
+        "temp_opt": 12.0,
+        "temp_min": 10.0,
+        "temp_max": 14.0,
+        "temp_critical": 18.0,
+        "optimal_temp_min": 10.0,
+        "optimal_temp_max": 14.0,
+        "humidity_min": 85.0,
+        "humidity_max": 95.0,
+        "min_acceptable_humidity": 85.0,
+        "max_acceptable_humidity": 95.0,
+        "vibration_max": 0.25,
+        "base_shelf_life_hours": 144.0,
+        "baseline_shelf_life_hours": 144.0,
+        "typical_market_price_inr": 32.0,
+    },
+    "Mango": {
+        "temp_opt": 12.5,
+        "temp_min": 10.0,
+        "temp_max": 14.0,
+        "temp_critical": 17.0,
+        "optimal_temp_min": 10.0,
+        "optimal_temp_max": 14.0,
+        "humidity_min": 85.0,
+        "humidity_max": 95.0,
+        "min_acceptable_humidity": 85.0,
+        "max_acceptable_humidity": 95.0,
+        "vibration_max": 0.20,
+        "base_shelf_life_hours": 168.0,
+        "baseline_shelf_life_hours": 168.0,
+        "typical_market_price_inr": 95.0,
+    },
+    "Apple": {
+        "temp_opt": 2.0,
+        "temp_min": 0.0,
+        "temp_max": 4.0,
+        "temp_critical": 8.0,
+        "optimal_temp_min": 0.0,
+        "optimal_temp_max": 4.0,
+        "humidity_min": 88.0,
+        "humidity_max": 96.0,
+        "min_acceptable_humidity": 88.0,
+        "max_acceptable_humidity": 96.0,
+        "vibration_max": 0.30,
+        "base_shelf_life_hours": 720.0,
+        "baseline_shelf_life_hours": 720.0,
+        "typical_market_price_inr": 155.0,
+    },
+}
+
+MARKETS_CONFIG: Dict[str, Dict[str, Any]] = {
+    "Nashik": {"lat": 19.9975, "lon": 73.7898, "latitude": 19.9975, "longitude": 73.7898, "state": "Maharashtra"},
+    "Mumbai": {"lat": 19.0760, "lon": 72.8777, "latitude": 19.0760, "longitude": 72.8777, "state": "Maharashtra"},
+    "Pune": {"lat": 18.5204, "lon": 73.8567, "latitude": 18.5204, "longitude": 73.8567, "state": "Maharashtra"},
+    "Hyderabad": {"lat": 17.3850, "lon": 78.4867, "latitude": 17.3850, "longitude": 78.4867, "state": "Telangana"},
+    "Bengaluru": {"lat": 12.9716, "lon": 77.5946, "latitude": 12.9716, "longitude": 77.5946, "state": "Karnataka"},
+    "Chennai": {"lat": 13.0827, "lon": 80.2707, "latitude": 13.0827, "longitude": 80.2707, "state": "Tamil Nadu"},
+    "Delhi": {"lat": 28.7041, "lon": 77.1025, "latitude": 28.7041, "longitude": 77.1025, "state": "Delhi NCR"},
+}
+
+DEFAULT_ROUTES: List[Dict[str, Any]] = [
+    {"origin": "Nashik", "destination": "Mumbai", "distance_km": 168.0, "transit_hours": 4.5, "toll_inr": 450.0},
+    {"origin": "Nashik", "destination": "Pune", "distance_km": 208.0, "transit_hours": 5.0, "toll_inr": 500.0},
+    {"origin": "Nashik", "destination": "Delhi", "distance_km": 1250.0, "transit_hours": 24.0, "toll_inr": 3200.0},
+    {"origin": "Hyderabad", "destination": "Bengaluru", "distance_km": 570.0, "transit_hours": 10.0, "toll_inr": 1400.0},
+    {"origin": "Bengaluru", "destination": "Chennai", "distance_km": 345.0, "transit_hours": 7.0, "toll_inr": 900.0},
+]
+
+DEFAULT_CORRIDORS = DEFAULT_ROUTES
+

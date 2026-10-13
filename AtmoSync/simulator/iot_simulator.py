@@ -185,5 +185,130 @@ def main():
             out_file.close()
 
 
+from dataclasses import dataclass
+
+@dataclass
+class SensorTelemetryEvent:
+    container_id: str
+    shipment_id: str
+    commodity: str
+    temperature_c: float
+    humidity_pct: float
+    vibration_g: float
+    latitude: float
+    longitude: float
+    origin: str
+    destination: str
+    quantity_kg: int
+    timestamp: Any
+
+TelemetryEvent = SensorTelemetryEvent
+
+class IoTFleetSimulator:
+    def __init__(self, num_containers=5, abnormal_prob=0.35, force_demo_scenario=True):
+        self.num_containers = num_containers
+        self.cycle = 0
+        self.force_demo_scenario = force_demo_scenario
+
+    def generate_fleet_readings(self) -> List[SensorTelemetryEvent]:
+        self.cycle += 1
+        now = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        temp_001 = round(6.5 + min(12.0, self.cycle * 1.5), 2) if self.force_demo_scenario else 6.5
+        
+        return [
+            SensorTelemetryEvent(
+                container_id="CONT_001",
+                shipment_id="SHIP_7894",
+                commodity="Avocado",
+                temperature_c=temp_001,
+                humidity_pct=round(90.5 + random.uniform(-1, 2), 1),
+                vibration_g=0.18,
+                latitude=19.3412,
+                longitude=73.4521,
+                origin="Nashik",
+                destination="Mumbai",
+                quantity_kg=12000,
+                timestamp=now,
+            ),
+            SensorTelemetryEvent(
+                container_id="CONT_002",
+                shipment_id="SHIP_7895",
+                commodity="Banana",
+                temperature_c=14.2,
+                humidity_pct=91.0,
+                vibration_g=0.12,
+                latitude=18.7821,
+                longitude=73.9102,
+                origin="Nashik",
+                destination="Pune",
+                quantity_kg=15000,
+                timestamp=now,
+            ),
+            SensorTelemetryEvent(
+                container_id="CONT_003",
+                shipment_id="SHIP_7896",
+                commodity="Tomato",
+                temperature_c=12.1,
+                humidity_pct=89.5,
+                vibration_g=0.14,
+                latitude=14.5200,
+                longitude=77.6100,
+                origin="Hyderabad",
+                destination="Bengaluru",
+                quantity_kg=10000,
+                timestamp=now,
+            ),
+            SensorTelemetryEvent(
+                container_id="CONT_004",
+                shipment_id="SHIP_7897",
+                commodity="Mango",
+                temperature_c=12.5,
+                humidity_pct=88.2,
+                vibration_g=0.10,
+                latitude=13.0100,
+                longitude=79.2000,
+                origin="Bengaluru",
+                destination="Chennai",
+                quantity_kg=8000,
+                timestamp=now,
+            ),
+            SensorTelemetryEvent(
+                container_id="CONT_005",
+                shipment_id="SHIP_7898",
+                commodity="Apple",
+                temperature_c=2.4,
+                humidity_pct=91.8,
+                vibration_g=0.09,
+                latitude=29.5400,
+                longitude=76.8500,
+                origin="Shimla",
+                destination="Delhi",
+                quantity_kg=14000,
+                timestamp=now,
+            ),
+        ]
+
+class IoTTelemetrySimulator(IoTFleetSimulator):
+    def __init__(self, num_containers=5, random_seed=None):
+        super().__init__(num_containers=num_containers)
+        if random_seed is not None:
+            random.seed(random_seed)
+        self.containers = [
+            type('MockCont', (), {
+                'container_id': f'CONT_{i+1:03d}',
+                'commodity': 'Avocado' if i == 0 else 'Banana',
+                'anomaly_mode': 'GRADUAL_THERMAL_RISE' if i == 0 else 'NOMINAL'
+            })() for i in range(num_containers)
+        ]
+
+    def generate_tick(self):
+        return self.generate_fleet_readings()[:self.num_containers]
+
+    def stream_telemetry(self, interval_sec=0.01, max_iterations=3):
+        for _ in range(max_iterations):
+            yield self.generate_tick()
+            time.sleep(interval_sec)
+
 if __name__ == "__main__":
     main()
+

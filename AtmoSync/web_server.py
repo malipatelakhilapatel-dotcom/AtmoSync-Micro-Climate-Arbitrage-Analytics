@@ -286,7 +286,11 @@ class StateManager:
         total_loss_avoided = sum(a["spoilage_loss_avoided"] for a in arbitrage_data if a["spoilage_loss_avoided"] > 0)
 
         markets_payload = {
-            name: {"lat": m["latitude"], "lon": m["longitude"], "state": m.get("state", "")}
+            name: {
+                "lat": m.get("latitude", m.get("lat", 0.0)),
+                "lon": m.get("longitude", m.get("lon", 0.0)),
+                "state": m.get("state", ""),
+            }
             for name, m in MARKETS_CONFIG.items()
         }
 

@@ -222,9 +222,55 @@ const getProgressColor = (tier) => {
 };
 
 // ============================================================================
-// TAB NAVIGATION CONTROLLER
+// TAB & SLIDE PRESENTATION CONTROLLER
 // ============================================================================
+const SLIDE_ORDER = [
+  'tab-overview',
+  'tab-architecture',
+  'tab-math-lab',
+  'tab-live-console',
+  'tab-team',
+  'tab-case-study',
+  'tab-bi-replica'
+];
+
+function getCurrentSlideIndex() {
+  const currentTab = document.querySelector('.nav-tab.active')?.getAttribute('data-tab') || 'tab-overview';
+  const idx = SLIDE_ORDER.indexOf(currentTab);
+  return idx >= 0 ? idx : 0;
+}
+
+function nextSlide() {
+  const idx = getCurrentSlideIndex();
+  const nextIdx = (idx + 1) % SLIDE_ORDER.length;
+  switchTab(SLIDE_ORDER[nextIdx]);
+}
+
+function prevSlide() {
+  const idx = getCurrentSlideIndex();
+  const prevIdx = (idx - 1 + SLIDE_ORDER.length) % SLIDE_ORDER.length;
+  switchTab(SLIDE_ORDER[prevIdx]);
+}
+
+// Global keyboard arrow navigation for slide presentation mode
+document.addEventListener('keydown', (e) => {
+  if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName)) return;
+  if (e.key === 'ArrowRight') {
+    e.preventDefault();
+    nextSlide();
+  } else if (e.key === 'ArrowLeft') {
+    e.preventDefault();
+    prevSlide();
+  }
+});
+
 function switchTab(targetTabId) {
+  // Ensure target exists, fallback gracefully if not
+  if (!document.getElementById(targetTabId)) {
+    console.warn(`Target tab ${targetTabId} not found, defaulting to tab-overview`);
+    targetTabId = 'tab-overview';
+  }
+
   // Update Tab buttons
   document.querySelectorAll('.nav-tab').forEach((tab) => {
     tab.classList.toggle('active', tab.getAttribute('data-tab') === targetTabId);
@@ -240,20 +286,42 @@ function switchTab(targetTabId) {
     history.replaceState(null, null, `#${targetTabId.replace('tab-', '')}`);
   }
 
-  // If switching to Live Console, trigger Leaflet & Chart size invalidations
+  // Smooth scroll to top of view
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  // If switching to Live Console, trigger Leaflet & Chart size invalidations safely
   if (targetTabId === 'tab-live-console') {
     setTimeout(() => {
-      if (leafletMap) {
-        leafletMap.invalidateSize();
+      try {
+        if (leafletMap && typeof leafletMap.invalidateSize === 'function') {
+          leafletMap.invalidateSize();
+        }
+        if (tempChart && typeof tempChart.resize === 'function') tempChart.resize();
+        if (humChart && typeof humChart.resize === 'function') humChart.resize();
+      } catch (err) {
+        console.warn('Map/chart resize error:', err);
       }
-      if (tempChart) tempChart.resize();
-      if (humChart) humChart.resize();
     }, 150);
   }
 
   // If switching to Math Lab, trigger calculation
   if (targetTabId === 'tab-math-lab') {
     updateMathSandbox();
+  }
+
+  // If switching to Executive BI View, initialize/update BI replica charts
+  if (targetTabId === 'tab-bi-replica') {
+    setTimeout(() => {
+      try {
+        initPbiCharts();
+        updatePbiTable(currentArbitrageData, currentFleetData);
+        if (pbiChartArbitrage && typeof pbiChartArbitrage.resize === 'function') pbiChartArbitrage.resize();
+        if (pbiChartDegradation && typeof pbiChartDegradation.resize === 'function') pbiChartDegradation.resize();
+        if (pbiChartMandi && typeof pbiChartMandi.resize === 'function') pbiChartMandi.resize();
+      } catch (err) {
+        console.warn('PBI chart resize error:', err);
+      }
+    }, 150);
   }
 }
 
@@ -528,6 +596,23 @@ function updateMathSandbox() {
   document.getElementById('val-slider-vib').textContent = `${vibVal.toFixed(2)} G`;
   document.getElementById('val-slider-alerts').textContent = `${alertsVal} Alerts`;
   document.getElementById('val-slider-dist').textContent = `${distVal} km`;
+
+  // Dynamic visual track fill for range sliders
+  [
+    { id: 'slider-temp', min: 0, max: 25 },
+    { id: 'slider-hum', min: 60, max: 100 },
+    { id: 'slider-vib', min: 0.05, max: 0.8 },
+    { id: 'slider-alerts', min: 0, max: 5 },
+    { id: 'slider-dist', min: 50, max: 600 },
+  ].forEach((item) => {
+    const el = document.getElementById(item.id);
+    if (el) {
+      const val = parseFloat(el.value);
+      const pct = Math.max(0, Math.min(100, ((val - item.min) / (item.max - item.min)) * 100));
+      const color = item.id === 'slider-temp' && val > 12 ? '#ef4444' : item.id === 'slider-temp' && val > 8 ? '#f59e0b' : '#00d2ff';
+      el.style.background = `linear-gradient(to right, ${color} 0%, ${color} ${pct}%, rgba(255, 255, 255, 0.12) ${pct}%, rgba(255, 255, 255, 0.12) 100%)`;
+    }
+  });
 
   const specs = COMMODITY_PRESETS[activeSandboxCommodity];
 
@@ -1107,6 +1192,206 @@ function toggleAutoStream() {
   }
 }
 
+// ============================================================================
+// EXECUTIVE BI VIEW (POWER BI / SUPERSET CLASS REPLICA ENGINE)
+// ============================================================================
+let pbiChartArbitrage = null;
+let pbiChartDegradation = null;
+let pbiChartMandi = null;
+
+function initPbiCharts() {
+  if (typeof Chart === 'undefined') return;
+
+  const ctxArb = document.getElementById('pbiChartArbitrage');
+  if (ctxArb && !pbiChartArbitrage) {
+    pbiChartArbitrage = new Chart(ctxArb, {
+      type: 'bar',
+      data: {
+        labels: ['CONT_001 (Avocado)', 'CONT_002 (Banana)', 'CONT_003 (Tomato)', 'CONT_004 (Mango)', 'CONT_005 (Apple)'],
+        datasets: [
+          {
+            label: 'Scheduled Status-Quo Loss (₹)',
+            data: [630864, 16470, 33720, 4710, 36736],
+            backgroundColor: 'rgba(239, 68, 68, 0.85)',
+            borderRadius: 4,
+          },
+          {
+            label: 'Net Arbitrage Salvaged (₹)',
+            data: [180826, 22120, 36370, 75360, 0],
+            backgroundColor: 'rgba(16, 185, 129, 0.9)',
+            borderRadius: 4,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'top', labels: { boxWidth: 10, font: { family: 'Outfit', size: 10 } } },
+        },
+        scales: {
+          y: {
+            ticks: {
+              callback: (v) => '₹' + (v >= 1000 ? (v / 1000).toFixed(0) + 'k' : v),
+              font: { family: 'JetBrains Mono', size: 9 },
+            },
+          },
+          x: { ticks: { font: { family: 'Outfit', size: 9 } } },
+        },
+      },
+    });
+  }
+
+  const ctxDeg = document.getElementById('pbiChartDegradation');
+  if (ctxDeg && !pbiChartDegradation) {
+    pbiChartDegradation = new Chart(ctxDeg, {
+      type: 'line',
+      data: {
+        labels: ['0h', '2h', '4h', '6h', '8h', '10h', '12h'],
+        datasets: [
+          {
+            label: 'CONT_001 Shelf Life (TTS Hours)',
+            data: [120, 95, 68, 35, 20, 12, 5],
+            borderColor: '#ef4444',
+            backgroundColor: 'rgba(239, 68, 68, 0.15)',
+            fill: true,
+            tension: 0.35,
+          },
+          {
+            label: 'Normal Baseline TTS',
+            data: [120, 118, 116, 114, 112, 110, 108],
+            borderColor: '#10b981',
+            borderDash: [5, 5],
+            tension: 0.1,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'top', labels: { boxWidth: 10, font: { family: 'Outfit', size: 10 } } },
+        },
+        scales: {
+          y: { title: { display: true, text: 'TTS (Hours)', font: { size: 9 } }, ticks: { font: { size: 9 } } },
+          x: { ticks: { font: { size: 9 } } },
+        },
+      },
+    });
+  }
+
+  const ctxMandi = document.getElementById('pbiChartMandi');
+  if (ctxMandi && !pbiChartMandi) {
+    pbiChartMandi = new Chart(ctxMandi, {
+      type: 'bar',
+      data: {
+        labels: ['Mumbai APMC', 'Pune APMC', 'Delhi Azadpur', 'Bengaluru Yeshwanthpur', 'Chennai Koyambedu'],
+        datasets: [
+          {
+            label: 'Avocado (₹/kg)',
+            data: [180, 185, 210, 175, 190],
+            backgroundColor: 'rgba(56, 189, 248, 0.85)',
+            borderRadius: 4,
+          },
+          {
+            label: 'Mango (₹/kg)',
+            data: [95, 90, 115, 85, 92],
+            backgroundColor: 'rgba(245, 158, 11, 0.85)',
+            borderRadius: 4,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'top', labels: { boxWidth: 10, font: { family: 'Outfit', size: 10 } } },
+        },
+        scales: {
+          y: { ticks: { callback: (v) => '₹' + v, font: { size: 9 } } },
+          x: { ticks: { font: { size: 9 } } },
+        },
+      },
+    });
+  }
+}
+
+function updatePbiTable(arbitrageList, fleetList) {
+  const tbody = document.getElementById('pbi-table-body');
+  if (!tbody) return;
+
+  const list = arbitrageList && arbitrageList.length ? arbitrageList : [
+    { container_id: 'CONT_001', commodity: 'Avocado', origin: 'Nashik', destination: 'Mumbai', risk_score: 82.4, tts: '20.0h', recommended: 'Pune', net_arb: 180826, directive: 'EXECUTE_REROUTE' },
+    { container_id: 'CONT_002', commodity: 'Banana', origin: 'Nashik', destination: 'Pune', risk_score: 34.2, tts: '88.5h', recommended: 'Delhi', net_arb: 22120, directive: 'OPPORTUNITY_IDENTIFIED' },
+    { container_id: 'CONT_003', commodity: 'Tomato', origin: 'Hyderabad', destination: 'Bengaluru', risk_score: 41.5, tts: '96.2h', recommended: 'Delhi', net_arb: 36370, directive: 'OPPORTUNITY_IDENTIFIED' },
+    { container_id: 'CONT_004', commodity: 'Mango', origin: 'Bengaluru', destination: 'Chennai', risk_score: 22.0, tts: '145.0h', recommended: 'Delhi', net_arb: 75360, directive: 'OPPORTUNITY_IDENTIFIED' },
+    { container_id: 'CONT_005', commodity: 'Apple', origin: 'Shimla', destination: 'Delhi', risk_score: 8.5, tts: '680.0h', recommended: 'Chennai', net_arb: -82614, directive: 'MAINTAIN_ROUTE' },
+  ];
+
+  tbody.innerHTML = list.map((item) => {
+    const isReroute = item.directive === 'EXECUTE_REROUTE';
+    const isOpp = item.directive === 'OPPORTUNITY_IDENTIFIED';
+    const badgeColor = isReroute ? '#ef4444' : isOpp ? '#0284c7' : '#10b981';
+    const badgeBg = isReroute ? 'rgba(239, 68, 68, 0.15)' : isOpp ? 'rgba(2, 132, 199, 0.15)' : 'rgba(16, 185, 129, 0.15)';
+    const netArbVal = item.net_arb !== undefined ? item.net_arb : item.net_arbitrage_inr;
+    const scoreVal = item.risk_score !== undefined ? item.risk_score : item.spoilage_risk_score;
+    const ttsVal = item.tts || (item.time_to_spoilage_hours ? item.time_to_spoilage_hours + 'h' : '45.0h');
+    const destVal = item.destination || item.current_destination || 'Mumbai';
+    const recVal = item.recommended || item.recommended_market || 'Pune';
+
+    return `
+      <tr style="border-bottom: 1px solid #e2e8f0;">
+        <td style="padding: 6px 8px; font-weight: 700;">${item.container_id}</td>
+        <td style="padding: 6px 8px;">${item.commodity}</td>
+        <td style="padding: 6px 8px; color: #64748b;">${item.origin || 'Nashik'} &rarr; ${destVal}</td>
+        <td style="padding: 6px 8px; font-weight: 700; color: ${scoreVal >= 70 ? '#ef4444' : scoreVal >= 40 ? '#f59e0b' : '#10b981'};">${scoreVal}</td>
+        <td style="padding: 6px 8px; font-family: var(--font-mono);">${ttsVal}</td>
+        <td style="padding: 6px 8px; font-weight: 600; color: #0284c7;">${recVal}</td>
+        <td style="padding: 6px 8px; font-family: var(--font-mono); font-weight: 700; color: ${netArbVal > 0 ? '#10b981' : '#64748b'};">${formatINR(netArbVal)}</td>
+        <td style="padding: 6px 8px;">
+          <span style="font-size: 0.68rem; font-weight: 700; padding: 2px 6px; border-radius: 4px; background: ${badgeBg}; color: ${badgeColor}; border: 1px solid ${badgeColor};">
+            ${item.directive}
+          </span>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function filterPbiData() {
+  const commFilter = document.getElementById('pbi-filter-commodity')?.value || 'ALL';
+  const riskFilter = document.getElementById('pbi-filter-risk')?.value || 'ALL';
+
+  let filtered = currentArbitrageData && currentArbitrageData.length ? [...currentArbitrageData] : [];
+  if (commFilter !== 'ALL') {
+    filtered = filtered.filter((f) => f.commodity === commFilter);
+  }
+  if (riskFilter !== 'ALL') {
+    filtered = filtered.filter((f) => {
+      const score = f.spoilage_risk_score || 0;
+      if (riskFilter === 'Critical') return score >= 75;
+      if (riskFilter === 'High') return score >= 50 && score < 75;
+      if (riskFilter === 'Moderate') return score >= 25 && score < 50;
+      return score < 25;
+    });
+  }
+  updatePbiTable(filtered, currentFleetData);
+}
+
+function switchPbiSheet(sheetKey) {
+  document.querySelectorAll('.pbi-sheet-tab').forEach((b) => b.classList.remove('active'));
+  const activeTab = document.getElementById(`pbi-tab-${sheetKey}`);
+  if (activeTab) activeTab.classList.add('active');
+
+  const bannerTitle = document.querySelector('.pbi-title-group h2');
+  if (bannerTitle) {
+    if (sheetKey === 'exec') bannerTitle.textContent = 'COLD-CHAIN ARBITRAGE DECISION TOWER (EXECUTIVE SUMMARY)';
+    else if (sheetKey === 'environ') bannerTitle.textContent = 'ENVIRONMENTAL TELEMATICS & KINETICS BREAKDOWN';
+    else if (sheetKey === 'logistics') bannerTitle.textContent = 'LOGISTICS FREIGHT CORRIDORS & WHOLESALE SPREADS';
+    else if (sheetKey === 'marts') bannerTitle.textContent = 'SNOWFLAKE ANALYTICS MARTS (FCT_SPOILAGE_ARBITRAGE)';
+  }
+}
+
 function renderDashboard(data) {
   if (!data) return;
 
@@ -1122,13 +1407,24 @@ function renderDashboard(data) {
   updateLeaderboard(data.fleet);
   updateCharts(data.history);
   updateArbitrageTable(data.arbitrage, data.fleet);
+
+  // Update Executive BI replica
+  updatePbiTable(data.arbitrage, data.fleet);
+  if (data.kpis) {
+    const kpiFleet = document.getElementById('pbi-kpi-fleet');
+    if (kpiFleet) kpiFleet.textContent = data.kpis.total_containers || 5;
+    const kpiCrit = document.getElementById('pbi-kpi-critical');
+    if (kpiCrit) kpiCrit.textContent = data.kpis.critical_containers || 1;
+    const kpiTemp = document.getElementById('pbi-kpi-temp');
+    if (kpiTemp) kpiTemp.textContent = `${data.kpis.average_temperature_c || 11.8} °C`;
+  }
 }
 
 // ============================================================================
 // INITIALIZATION ON DOM READY
 // ============================================================================
 document.addEventListener('DOMContentLoaded', () => {
-  // 1. Initialize Tabs
+  // 1. Initialize Tabs & Slide Presentation Router
   initTabRouter();
 
   // 2. Initialize Layer 1 Detail Card by default
@@ -1137,9 +1433,20 @@ document.addEventListener('DOMContentLoaded', () => {
   // 3. Initialize Math Sandbox with Avocado preset
   updateMathSandbox();
 
+  // 3b. Attach explicit input & change listeners for all 5 math lab sliders
+  ['slider-temp', 'slider-hum', 'slider-vib', 'slider-alerts', 'slider-dist'].forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.addEventListener('input', updateMathSandbox);
+      el.addEventListener('change', updateMathSandbox);
+    }
+  });
+
   // 4. Initialize Map & Charts
   initMap();
   initCharts();
+  initPbiCharts();
+  updatePbiTable(currentArbitrageData, currentFleetData);
 
   // 5. Connect Global Header Buttons
   document.getElementById('btn-step')?.addEventListener('click', simulateStep);
@@ -1154,3 +1461,4 @@ document.addEventListener('DOMContentLoaded', () => {
   // 7. Initial Data Fetch
   fetchConsoleData();
 });
+
