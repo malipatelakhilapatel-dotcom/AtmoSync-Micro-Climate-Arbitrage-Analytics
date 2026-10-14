@@ -1123,29 +1123,250 @@ function updateIncidentBanner(fleet, arbitrage) {
 // ============================================================================
 // API DISPATCH ACTIONS
 // ============================================================================
+// API DISPATCH ACTIONS & CLIENT-SIDE HYBRID SIMULATOR (VERCEL / RENDER READY)
+// ============================================================================
+let isOfflineMode = false;
+let clientSimState = null;
+
+function createClientSimulationState() {
+  let cycle = 0;
+  const reroutedSet = new Set();
+  
+  const MARKETS = {
+    Nashik: { lat: 19.9975, lon: 73.7898, state: "Maharashtra" },
+    Mumbai: { lat: 19.0760, lon: 72.8777, state: "Maharashtra" },
+    Pune: { lat: 18.5204, lon: 73.8567, state: "Maharashtra" },
+    Hyderabad: { lat: 17.3850, lon: 78.4867, state: "Telangana" },
+    Bengaluru: { lat: 12.9716, lon: 77.5946, state: "Karnataka" },
+    Chennai: { lat: 13.0827, lon: 80.2707, state: "Tamil Nadu" },
+    Delhi: { lat: 28.7041, lon: 77.1025, state: "Delhi NCR" }
+  };
+
+  const history = {
+    CONT_001: [],
+    CONT_002: [],
+    CONT_003: [],
+    CONT_004: [],
+    CONT_005: []
+  };
+
+  function stepInternal() {
+    cycle++;
+    const nowStr = new Date().toLocaleTimeString('en-US', { hour12: false });
+    const temp001 = +(6.5 + Math.min(12.0, cycle * 1.5)).toFixed(2);
+    
+    const readings = [
+      { cid: "CONT_001", ship: "SHIP_7894", comm: "Avocado", temp: temp001, hum: +(90.5 + (Math.random() * 3 - 1.5)).toFixed(1), vib: 0.18, lat: 19.3412, lon: 73.4521, origin: "Nashik", dest: "Mumbai", qty: 12000 },
+      { cid: "CONT_002", ship: "SHIP_7895", comm: "Banana", temp: 14.2, hum: 91.0, vib: 0.12, lat: 18.7821, lon: 73.9102, origin: "Nashik", dest: "Pune", qty: 15000 },
+      { cid: "CONT_003", ship: "SHIP_7896", comm: "Tomato", temp: 12.1, hum: 89.5, vib: 0.14, lat: 14.5200, lon: 77.6100, origin: "Hyderabad", dest: "Bengaluru", qty: 10000 },
+      { cid: "CONT_004", ship: "SHIP_7897", comm: "Mango", temp: 13.5, hum: 88.0, vib: 0.11, lat: 23.4500, lon: 75.1200, origin: "Nashik", dest: "Delhi", qty: 8000 },
+      { cid: "CONT_005", ship: "SHIP_7898", comm: "Apple", temp: 3.2, hum: 91.5, vib: 0.08, lat: 13.0100, lon: 79.1500, origin: "Bengaluru", dest: "Chennai", qty: 14000 }
+    ];
+
+    readings.forEach(r => {
+      history[r.cid].push({
+        step: cycle,
+        temp: r.temp,
+        hum: r.hum,
+        vib: r.vib,
+        time: nowStr,
+        ...r
+      });
+      if (history[r.cid].length > 30) history[r.cid].shift();
+    });
+  }
+
+  // Generate initial 3 cycles
+  for (let i = 0; i < 3; i++) stepInternal();
+
+  function buildPayload() {
+    const fleet = [];
+    const arbitrage = [];
+    
+    const specs = {
+      Avocado: { opt: 6.0, crit: 12.0, max: 8.5, min: 4.5, maxH: 95, minH: 80, vibM: 0.25, shelf: 120, price: 185 },
+      Banana: { opt: 14.0, crit: 18.0, max: 15.0, min: 13.0, maxH: 95, minH: 85, vibM: 0.20, shelf: 96, price: 48 },
+      Tomato: { opt: 12.0, crit: 18.0, max: 14.0, min: 10.0, maxH: 92, minH: 85, vibM: 0.20, shelf: 144, price: 32 },
+      Mango: { opt: 12.5, crit: 17.0, max: 14.0, min: 10.5, maxH: 95, minH: 85, vibM: 0.20, shelf: 168, price: 95 },
+      Apple: { opt: 2.0, crit: 8.0, max: 4.0, min: 0.0, maxH: 96, minH: 88, vibM: 0.30, shelf: 720, price: 155 }
+    };
+
+    const cids = ["CONT_001", "CONT_002", "CONT_003", "CONT_004", "CONT_005"];
+    cids.forEach(cid => {
+      const events = history[cid];
+      if (!events || events.length === 0) return;
+      const latest = events[events.length - 1];
+      const sp = specs[latest.comm] || specs.Tomato;
+      const isRerouted = reroutedSet.has(cid);
+
+      const recent = events.slice(-3);
+      const avgTemp = +(recent.reduce((acc, e) => acc + e.temp, 0) / recent.length).toFixed(2);
+      const avgHum = +(recent.reduce((acc, e) => acc + e.hum, 0) / recent.length).toFixed(2);
+
+      const tempPenalty = Math.min(45.0, Math.max(0.0, ((avgTemp - sp.opt) / (sp.crit - sp.opt)) * 45.0));
+      const humPenalty = Math.min(20.0, Math.max(0.0, (Math.abs(avgHum - 90.0) / 20.0) * 20.0));
+      const vibPenalty = Math.min(15.0, Math.max(0.0, ((latest.vib - 0.10) / 0.35) * 15.0));
+      const expPenalty = latest.temp > sp.max ? 12.0 : 0.0;
+
+      const score = +Math.min(100.0, Math.max(0.0, tempPenalty + humPenalty + vibPenalty + expPenalty)).toFixed(1);
+      let riskLevel = "Low";
+      if (score >= 75.0) riskLevel = "Critical";
+      else if (score >= 50.0) riskLevel = "High";
+      else if (score >= 25.0) riskLevel = "Moderate";
+
+      const decay = Math.max(0.05, 1.0 - (score / 100.0));
+      const tts = +Math.max(1.0, sp.shelf * Math.pow(decay, 1.6)).toFixed(1);
+
+      let action = "MAINTAIN_ROUTE";
+      let dest = latest.dest;
+      let recMarket = "N/A";
+      let netArb = 0;
+      let lossAvoided = 0;
+      let potLoss = Math.round(latest.qty * sp.price * (score >= 50 ? 0.70 : 0.15));
+      let divCost = 0;
+
+      if (cid === "CONT_001") {
+        recMarket = "Pune";
+        divCost = 5575;
+        lossAvoided = 630864;
+        netArb = isRerouted ? 283189 : 283189;
+        if (isRerouted) {
+          action = "REROUTED";
+          dest = "Pune (Rerouted)";
+        } else if (riskLevel === "Critical" || riskLevel === "High") {
+          action = "EXECUTE_REROUTE";
+        }
+      }
+
+      fleet.push({
+        container_id: cid,
+        shipment_id: latest.ship,
+        commodity: latest.comm,
+        origin: latest.origin,
+        destination: dest,
+        quantity_kg: latest.qty,
+        temperature_c: latest.temp,
+        humidity_pct: latest.hum,
+        vibration_g: latest.vib,
+        latitude: latest.lat,
+        longitude: latest.lon,
+        rolling_avg_temp: avgTemp,
+        rolling_avg_hum: avgHum,
+        temp_penalty: +tempPenalty.toFixed(1),
+        hum_penalty: +humPenalty.toFixed(1),
+        vib_penalty: +vibPenalty.toFixed(1),
+        exp_penalty: expPenalty,
+        spoilage_risk_score: score,
+        risk_level: riskLevel,
+        time_to_spoilage_hours: tts,
+        action: action,
+        is_rerouted: isRerouted,
+        min_safe_temp: sp.min,
+        max_safe_temp: sp.max,
+        min_safe_hum: sp.minH,
+        max_safe_hum: sp.maxH
+      });
+
+      arbitrage.push({
+        container_id: cid,
+        commodity: latest.comm,
+        quantity_kg: latest.qty,
+        current_destination: isRerouted ? "Pune" : latest.dest,
+        status_quo_value: latest.qty * sp.price - potLoss,
+        potential_loss: potLoss,
+        recommended_market: recMarket,
+        recommended_price: 185.0,
+        reroute_transit_hours: 2.8,
+        reroute_expected_value: 2000000,
+        diversion_cost: divCost,
+        spoilage_loss_avoided: lossAvoided,
+        net_arbitrage_inr: netArb,
+        is_viable: true,
+        directive: action
+      });
+    });
+
+    const totalContainers = fleet.length;
+    const atRisk = fleet.filter(c => c.risk_level === "High" || c.risk_level === "Critical").length;
+    const critCount = fleet.filter(c => c.risk_level === "Critical").length;
+    const avgT = +(fleet.reduce((a, b) => a + b.temperature_c, 0) / totalContainers).toFixed(1);
+    const avgH = +(fleet.reduce((a, b) => a + b.humidity_pct, 0) / totalContainers).toFixed(1);
+    const totArb = arbitrage.reduce((a, b) => a + (b.net_arbitrage_inr > 0 ? b.net_arbitrage_inr : 0), 0);
+    const totAvoided = arbitrage.reduce((a, b) => a + (b.spoilage_loss_avoided > 0 ? b.spoilage_loss_avoided : 0), 0);
+
+    return {
+      cycle: cycle,
+      kpis: {
+        total_containers: totalContainers,
+        at_risk_count: atRisk,
+        critical_count: critCount,
+        average_temp_c: avgT,
+        average_humidity_pct: avgH,
+        total_potential_arbitrage_inr: totArb,
+        total_loss_avoided_inr: totAvoided
+      },
+      fleet: fleet,
+      arbitrage: arbitrage,
+      history: history,
+      markets: MARKETS
+    };
+  }
+
+  return {
+    getData: () => buildPayload(),
+    step: () => { stepInternal(); return buildPayload(); },
+    reroute: (cid) => { reroutedSet.add(cid); return buildPayload(); },
+    reset: () => {
+      cycle = 0;
+      reroutedSet.clear();
+      Object.keys(history).forEach(k => history[k] = []);
+      for (let i = 0; i < 3; i++) stepInternal();
+      return buildPayload();
+    }
+  };
+}
+
 async function fetchConsoleData() {
   try {
     const res = await fetch('/api/data');
     if (!res.ok) throw new Error('API request failed');
     const data = await res.json();
+    isOfflineMode = false;
     renderDashboard(data);
   } catch (err) {
-    console.warn('Backend API connection offline, utilizing initial state', err);
+    console.info('Backend API offline or static hosting detected; activating client simulator', err);
+    isOfflineMode = true;
+    if (!clientSimState) clientSimState = createClientSimulationState();
+    renderDashboard(clientSimState.getData());
   }
 }
 
 async function simulateStep() {
+  if (isOfflineMode) {
+    if (!clientSimState) clientSimState = createClientSimulationState();
+    renderDashboard(clientSimState.step());
+    return;
+  }
   try {
     const res = await fetch('/api/step', { method: 'POST' });
     if (!res.ok) throw new Error('Step request failed');
     const data = await res.json();
     renderDashboard(data);
   } catch (err) {
-    console.error('Failed to advance step', err);
+    console.warn('Switching to client simulation for step', err);
+    isOfflineMode = true;
+    if (!clientSimState) clientSimState = createClientSimulationState();
+    renderDashboard(clientSimState.step());
   }
 }
 
 async function executeReroute(containerId) {
+  if (isOfflineMode) {
+    if (!clientSimState) clientSimState = createClientSimulationState();
+    renderDashboard(clientSimState.reroute(containerId));
+    switchTab('tab-live-console');
+    return;
+  }
   try {
     const res = await fetch('/api/reroute', {
       method: 'POST',
@@ -1155,24 +1376,35 @@ async function executeReroute(containerId) {
     if (!res.ok) throw new Error('Reroute request failed');
     const data = await res.json();
     renderDashboard(data);
-
-    // Switch to live console to visualize action if not already there
     switchTab('tab-live-console');
   } catch (err) {
-    console.error('Failed to execute reroute', err);
+    console.warn('Switching to client simulation for reroute', err);
+    isOfflineMode = true;
+    if (!clientSimState) clientSimState = createClientSimulationState();
+    renderDashboard(clientSimState.reroute(containerId));
+    switchTab('tab-live-console');
   }
 }
 
 async function resetFleet() {
+  if (isOfflineMode) {
+    if (!clientSimState) clientSimState = createClientSimulationState();
+    renderDashboard(clientSimState.reset());
+    return;
+  }
   try {
     const res = await fetch('/api/reset', { method: 'POST' });
     if (!res.ok) throw new Error('Reset request failed');
     const data = await res.json();
     renderDashboard(data);
   } catch (err) {
-    console.error('Failed to reset fleet', err);
+    console.warn('Switching to client simulation for reset', err);
+    isOfflineMode = true;
+    if (!clientSimState) clientSimState = createClientSimulationState();
+    renderDashboard(clientSimState.reset());
   }
 }
+
 
 function toggleAutoStream() {
   const btn = document.getElementById('btn-stream');

@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "cleanUrls": true,
+  "rewrites": [
+    { "source": "/", "destination": "/AtmoSync/web/index.html" },
+    { "source": "/styles.css", "destination": "/AtmoSync/web/styles.css" },
+    { "source": "/app.js", "destination": "/AtmoSync/web/app.js" },
+    { "source": "/(.*)", "destination": "/AtmoSync/web/$1" }
+  ]
+}
