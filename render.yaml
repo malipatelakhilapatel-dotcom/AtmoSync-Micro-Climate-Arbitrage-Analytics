@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: atmosync-analytics
+    runtime: python
+    plan: free
+    buildCommand: "pip install -r AtmoSync/requirements.txt"
+    startCommand: "python AtmoSync/web_server.py"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.8
